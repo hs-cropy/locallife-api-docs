@@ -1,0 +1,380 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>01 요구사항 정의서 · Cropy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"><style>:root{--bg:#F6F4EC;--card:#FFFEF9;--ink:#1E2A22;--body:#3E4A42;--muted:#6B766E;--green:#2E8B57;--dark:#1F3B2C;--line:#E3E6DC}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.75;word-break:keep-all}
+header{background:var(--dark);color:#F6F4EC;padding:14px 16px}header .in{max-width:960px;margin:0 auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap}header a{color:#F2B33D;text-decoration:none;font-weight:700}header nav{display:flex;gap:12px;flex-wrap:wrap;font-size:14px}header nav a{color:#CFE0D4;font-weight:500}
+main{max-width:960px;margin:0 auto;padding:32px 16px 80px}article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 24px}
+h1{font-size:30px;line-height:1.3;margin:0 0 16px}h2{font-size:23px;margin:40px 0 12px;padding-top:12px;border-top:2px solid var(--line);color:var(--dark)}h3{font-size:19px;margin:28px 0 8px}h4{font-size:17px}
+p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1E8;padding:1px 5px;border-radius:4px;font-size:.92em}pre{background:#1E2A22;color:#E8EFE9;padding:14px;border-radius:10px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}
+.tw{overflow-x:auto;margin:12px 0}table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}th{background:#EEF1E8}tr:nth-child(even) td{background:#FBFAF5}
+.note{background:#FFF4D9;border-radius:10px;padding:10px 14px;font-size:14px;color:#5A4A1E;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-decoration:none;color:var(--ink)}.card:hover{border-color:var(--green)}.card b{display:block;font-size:18px;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}</style></head><body><header><div class="in"><a href="../index.html">Cropy 문서</a><nav><a href="../reports/requirements.html">01 요구사항 정의서</a><a href="../reports/architecture.html">02 아키텍처 설계서</a><a href="../reports/model.html">03 모델 설계 및 최적화 문서</a><a href="../reports/api-interface.html">04 API 및 인터페이스 정의서</a><a href="../reports/test-report.html">05 테스트 계획서 및 결과 보고서</a><a href="../reports/deployment.html">06 배포 및 통합 가이드</a><a href="../swagger.html">Swagger</a><a href="../api-docs.html">API 문서</a></nav></div></header><main><p class="note">3팀 크래파스 · 2026 모바일시스템응용프로젝트 9주차 개발 문서 공개본입니다. 특허 출원 전인 재촬영 판정 기준 수치는 공개본에서 생략했습니다.</p><article><h1>Cropy 요구사항 정의서</h1>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>과목</td>
+<td>2026학년도 모바일시스템응용프로젝트</td>
+</tr>
+<tr>
+<td>팀</td>
+<td>3팀 크래파스 (김헌영, 고명준, 김민서, 박성호, 이서하)</td>
+</tr>
+<tr>
+<td>작성일</td>
+<td>2026-10-25</td>
+</tr>
+<tr>
+<td>기준 코드</td>
+<td><code>develop</code> 브랜치 <code>f81534e</code> (2026-10-22, PR #85 병합 시점)</td>
+</tr>
+<tr>
+<td>문서 버전</td>
+<td>2.0 (7주차 PRD v1.2를 9주차 양식에 맞춰 다시 정리)</td>
+</tr>
+</tbody></table></div>
+<h2>1.1 문서 개요</h2>
+<h3>작성 목적 및 대상</h3>
+<p>이 문서는 Cropy가 무엇을 해야 하고, 어느 정도로 잘 해야 하는지를 팀 안에서 한 번에 맞춰 보기 위해 작성했다. 그동안 요구사항이 PRD, 웹앱 기능명세서, 스프린트 백로그에 나뉘어 있었고, 구현이 진행되면서 문서와 코드가 서로 다른 말을 하는 부분이 생겼다. 예를 들어 7주차 PRD에는 업로드 한도가 10MB로 적혀 있지만 10월 16일 모바일 사진 지원 이후 실제 기본값은 100MiB다. 이번 판에서는 이런 차이를 코드 기준으로 고쳤다.</p>
+<h3>문서 범위 및 적용 대상 시스템</h3>
+<ul>
+<li>스마트폰 브라우저로 쓰는 Cropy 웹앱 (Next.js 프론트엔드 + FastAPI 백엔드 + PyTorch CNN)</li>
+<li>서버 없이 브라우저 안에서 모델을 돌리는 기기 진단 화면 (<code>/offline/</code>)</li>
+<li>최종 목표인 Orange Pi 5 Plus 독립 단말 (카메라·마이크·스피커 포함)</li>
+</ul>
+<h3>참고 자료</h3>
+<ul>
+<li><code>docs/PRD.md</code>, <code>docs/xpdocs/06_웹앱_기능명세서.md</code>, <code>docs/xpdocs/08_스프린트_백로그.md</code></li>
+<li><code>docs/MODEL_SPEC.md</code>, <code>docs/operations/API_SWAGGER.md</code>, <code>docs/operations/MOBILE_PHOTOS.md</code></li>
+<li>AI Hub 「노지 작물 질병 진단」 데이터셋 설명서</li>
+<li>농약안전정보시스템(PSIS) OpenAPI 안내</li>
+</ul>
+<h3>용어 정의</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>용어</th>
+<th>이 문서에서의 뜻</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>분류 점수</td>
+<td>CNN softmax 출력값. 실제로 그 병에 걸렸을 확률이 아니다</td>
+</tr>
+<tr>
+<td>혼동쌍</td>
+<td>사진만으로 자주 헷갈리는 두 병. 현재 무 검은무늬병↔무 노균병, 배추 검은썩음병↔배추 노균병 두 쌍</td>
+</tr>
+<tr>
+<td>재촬영(유도촬영)</td>
+<td>혼동쌍이 접전일 때 두 병을 가르는 부위(잎 뒷면 등)를 한 번 더 찍게 하는 기능</td>
+</tr>
+<tr>
+<td>기기 진단</td>
+<td>서버를 거치지 않고 휴대폰 브라우저에서 ONNX 모델로 바로 분류하는 방식</td>
+</tr>
+<tr>
+<td>기능 토큰</td>
+<td>Qwen이 어떤 기능을 어떤 인자로 부를지 나타내는 특수 토큰. 예: <code>&lt;hs_get_diagnosis&gt;</code></td>
+</tr>
+<tr>
+<td>단말</td>
+<td>Orange Pi 5 Plus에 웹·API·모델을 모두 올린 독립 장치</td>
+</tr>
+</tbody></table></div>
+<h2>1.2 프로젝트 개요</h2>
+<h3>프로젝트 목표 및 배경</h3>
+<p>고추·무·배추는 국내 노지에서 많이 기르는 작물이지만, 병이 생겼을 때 농가가 바로 물어볼 곳이 마땅치 않다. 농업기술센터에 사진을 보내거나 직접 찾아가야 하는데, 고령 농업인에게는 이 과정이 번거롭다. 또 밭에서는 모바일 데이터가 잘 안 터지는 경우가 있어서, 사진을 서버로 보내 결과를 받는 방식만으로는 쓰기 어렵다고 판단했다.</p>
+<p>그래서 처음부터 &quot;밭에서 인터넷 없이도 찍고, 결과를 듣는다&quot;를 최종 모습으로 잡았다. 진단 모델과 안내 모델이 기기 안에서 돌아가야 사진이 외부로 나가지 않고, 통신이 끊겨도 쓸 수 있다. 이것이 온디바이스로 가는 이유다.</p>
+<p>다만 보드가 늦게 지급되는 상황이라, 1단계는 휴대폰 브라우저로 쓰는 웹앱을 먼저 완성하고 2단계에서 Orange Pi로 옮기는 순서로 진행하고 있다.</p>
+<h3>기획 과정</h3>
+<p>기획과 화면 디자인은 김헌영이 맡았다. 9월 3일에 시나리오 스케치, 스토리보드, 프로젝트 기획서 초안, 디자인 시스템 초안을 한꺼번에 작성했고, 9월 8일에 웹앱 페이지별 기능명세서와 ERD, 4개 스프린트 백로그를 만들어 팀에 공유했다. 이 요구사항 정의서의 기능 목록도 그때의 기능명세서에서 출발했다.</p>
+<p>기획 단계에서 정한 사용자는 세 명이다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>페르소나</th>
+<th>특징</th>
+<th>원하는 것</th>
+<th>주로 쓸 형태</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P1. 김수현 (67세, 무·배추 노지 30년)</td>
+<td>스마트폰은 전화·카카오톡만 씀. 작은 글씨를 못 읽고 장갑을 낀 채 일함. 지금은 농약상에 사진을 보내고 답을 기다림</td>
+<td>&quot;무슨 병이고 뭘 뿌리면 되냐&quot;를 바로 듣기</td>
+<td>단말 (음성)</td>
+</tr>
+<tr>
+<td>P2. 박민수 (41세, 귀농 3년차, 고추 시설재배)</td>
+<td>스마트폰에 익숙하고 유튜브로 정보를 찾음. 등록 농약인지, 수확 전 며칠 쓰면 안 되는지 매번 헷갈림</td>
+<td>진단 근거와 농약 사용법을 한 화면에서, 이력으로 재발 추적</td>
+<td>웹앱</td>
+</tr>
+<tr>
+<td>P3. 이동주 (농업기술센터 지도사)</td>
+<td>농가를 찾아가 상담함</td>
+<td>이력의 사진·날짜·재촬영 여부를 보면서 상담</td>
+<td>웹앱 이력</td>
+</tr>
+</tbody></table></div>
+<p>문제 정의도 이 사람들을 기준으로 했다. P1은 글씨와 조작이 문제여서 큰 글씨와 음성 안내가, P2는 정보 찾기가 문제여서 농약 정보 연결이 요구사항으로 들어갔다. 혼동쌍 재촬영은 9월 초 모델 평가에서 오분류 44건 중 26건이 무 검은무늬병과 무 노균병 사이에서 나온 것을 보고 기획에 넣었다.</p>
+<p>10월 7일까지는 Figma에서 모바일·데스크톱 화면을 다시 디자인하면서 확인·완료·오류·로딩 같은 피드백 상태를 모바일 24종, 데스크톱 24종으로 정리했다(사진 형식 오류, 분석 시간 초과, 저장 실패, 이력 조회 실패 등). 10월 8일에는 이 디자인을 그대로 구현하려면 백엔드에 무엇이 더 필요한지 검토했고, 그 결과로 이력 심각도 필터, 저장 실패 복구, 저장 당시 안내 보존, 판정 상태와 오류 코드 API가 추가됐다(#53, #54). 디자인 단계에서 정한 예외 상태가 기능 요구사항으로 내려온 경우다.</p>
+<h3>기대 효과</h3>
+<ul>
+<li>사진 한 장으로 병해 후보와 대처 정보를 바로 볼 수 있다. 큰 글씨와 음성 안내로 고령 사용자도 혼자 쓸 수 있게 한다.</li>
+<li>헷갈리기 쉬운 병은 &quot;잎 뒷면을 찍어 주세요&quot;처럼 구체적으로 다시 찍게 해서, 한 장으로 억지로 답을 내는 것보다 덜 틀리게 한다.</li>
+<li>농약 정보는 모델이 지어내지 않고 PSIS 등록 정보만 보여 준다. 잘못된 약이나 사용량을 안내할 위험을 줄인다.</li>
+<li>단말에서는 사진이 기기 밖으로 나가지 않는다.</li>
+</ul>
+<h2>1.3 기능적 요구사항</h2>
+<p>상태와 작업자는 GitHub <code>hs-cropy/Cropy</code> 저장소 <code>develop</code> 브랜치(<code>f81534e</code>)에 병합된 커밋과 PR을 기준으로 적었다. &quot;구현&quot;은 해당 기능의 코드와 자동 테스트가 develop에 들어가 있다는 뜻이고, 실제 휴대폰·보드에서 확인했다는 뜻은 아니다. 실기기 확인 여부는 5번 테스트 문서에 따로 정리했다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>기능</th>
+<th>상세</th>
+<th>상태</th>
+<th>작업자</th>
+<th>근거 PR·커밋</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FR-01</td>
+<td>사진 입력</td>
+<td>카메라 촬영(getUserMedia) 또는 앨범 선택. 서버는 JPEG·PNG·HEIC/HEIF·DNG·WebP·AVIF를 받는다</td>
+<td>구현</td>
+<td>고명준(카메라), 김헌영(모바일 형식)</td>
+<td>#28, #83, 9/29 업로드 전 검증 커밋</td>
+</tr>
+<tr>
+<td>FR-02</td>
+<td>병해 분류</td>
+<td>9클래스(병해 6 + 정상 3) 분류, 상위 3개 후보와 분류 점수 표시</td>
+<td>구현</td>
+<td>김헌영</td>
+<td>9/3 초기 백엔드·ML, #19</td>
+</tr>
+<tr>
+<td>FR-03</td>
+<td>판정 상태 안내</td>
+<td>작물 불일치 → 혼동 → 낮은 점수(0.5 미만) 순으로 우선순위를 매겨 표시</td>
+<td>구현</td>
+<td>김헌영(판정 API), 김민서(예외 화면)</td>
+<td>#53, #78</td>
+</tr>
+<tr>
+<td>FR-04</td>
+<td>혼동쌍 재촬영</td>
+<td>상위 두 후보가 혼동쌍이고 점수 차가 기준보다 작으면 판별 부위 안내. 두 번째 사진과 정해진 비율로 합쳐 결과 갱신</td>
+<td>구현</td>
+<td>김헌영(판정·융합), 김민서(재촬영 예외 흐름), 고명준(새 촬영 화면 연결)</td>
+<td>9/3 초기 커밋, #78, #85</td>
+</tr>
+<tr>
+<td>FR-05</td>
+<td>병해 정보</td>
+<td>설명·원인·예방·관리 방법 표시</td>
+<td>구현. 내용은 팀이 정리한 시드 데이터</td>
+<td>김헌영</td>
+<td>#18, #53</td>
+</tr>
+<tr>
+<td>FR-06</td>
+<td>농약 정보</td>
+<td>작물·병해별 PSIS 등록 농약 조회. 검증되지 않은 사용량·희석배수는 숨김</td>
+<td>구현</td>
+<td>김헌영</td>
+<td>9/3 PSIS 동기화, #21</td>
+</tr>
+<tr>
+<td>FR-07</td>
+<td>진단 이력</td>
+<td>자동 저장, 목록·상세, 작물·심각도 필터</td>
+<td>구현</td>
+<td>김헌영(API·필터), 김민서(이력 UI)</td>
+<td>#54, #78</td>
+</tr>
+<tr>
+<td>FR-08</td>
+<td>음성 안내</td>
+<td>촬영 방법·결과·재촬영 안내를 한국어 TTS로 읽어 줌 (Web Speech API)</td>
+<td>구현. 음성 입력(STT)은 없음</td>
+<td>고명준</td>
+<td>#41</td>
+</tr>
+<tr>
+<td>FR-09</td>
+<td>기기 진단</td>
+<td>모델을 한 번 받아 두면 인터넷 없이 브라우저에서 진단. 연결되면 서버에 기록 전송</td>
+<td>구현</td>
+<td>김헌영</td>
+<td>#55, #56, #58</td>
+</tr>
+<tr>
+<td>FR-10</td>
+<td>저장 실패 복구</td>
+<td>DB 저장이 실패해도 결과를 24시간 보관하고 &quot;다시 저장&quot;으로 복구</td>
+<td>구현</td>
+<td>김헌영</td>
+<td>#53, #54</td>
+</tr>
+<tr>
+<td>FR-11</td>
+<td>실행 준비 확인</td>
+<td>모델과 DB가 실제로 준비됐는지 <code>/ready</code>로 확인</td>
+<td>구현</td>
+<td>박성호</td>
+<td>#67</td>
+</tr>
+<tr>
+<td>FR-12</td>
+<td>질문 응답</td>
+<td>사용자의 질문을 Qwen이 기능 호출로 바꾸고, 검증된 문장으로 답함</td>
+<td>개발 중. 백엔드 쪽 LLM 입력 스키마·수치 검증·10초 시간 제한·템플릿 대체 응답까지 병합. Qwen 모델은 Colab 실험 단계이며 백엔드와 연결 전</td>
+<td>박성호(백엔드 계약), 김헌영(Qwen 데이터·학습)</td>
+<td>#68, #69, #70, #79, #60, #61</td>
+</tr>
+<tr>
+<td>FR-13</td>
+<td>단말 통합</td>
+<td>Orange Pi에서 웹·API·CNN·DB를 실행하고 카메라·스피커와 연결</td>
+<td>계획. 보드 미수령으로 관련 커밋 없음</td>
+<td>이서하(예정)</td>
+<td>-</td>
+</tr>
+<tr>
+<td>FR-14</td>
+<td>사용자 구분</td>
+<td>로그인, 농가별 이력 분리</td>
+<td>이번 학기 범위 밖</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody></table></div>
+<p>화면 쪽은 기능과 별개로 디자인 개편 작업이 크게 한 번 있었다. 김헌영이 Figma에서 만든 디자인 시스템과 화면을 기준으로, 고명준이 10월 12<del>13일에 디자인 토큰을 코드로 옮기고 Button·Switch·Accordion·ActionBar 같은 공통 컴포넌트와 앱 틀(AppShell·헤더·내비)을 만들었다(#75, #77). 10월 17일에는 촬영·진단 결과 화면(Figma 01</del>03)을 새 디자인으로 바꿨다(#85). 김민서는 같은 시기에 진단 예외 상태와 이력 화면을 새 컴포넌트로 다시 만들었다(#78).</p>
+<h3>주요 시나리오</h3>
+<p><strong>시나리오 A. 일반 진단</strong>
+P1 김 씨가 배추 잎에서 반점을 보고 앱을 연다. 카메라 화면의 촬영 가이드에 맞춰 잎을 찍으면 분석 중 화면이 약 3초간 나온 뒤 &quot;배추 노균병일 가능성이 가장 높습니다&quot;라는 결과와 점수가 표시된다. 음성 안내를 켜 두었으면 결과를 읽어 준다. 아래쪽에서 예방 방법과 등록 농약 목록을 펼쳐 볼 수 있고, 결과는 이력에 자동 저장된다.</p>
+<p><strong>시나리오 B. 헷갈리는 병</strong>
+무 잎 사진의 결과가 검은무늬병 0.46, 노균병 0.41로 거의 같게 나온다. 이 경우 앱은 결과를 확정해서 보여 주지 않고 &quot;잎을 뒤집어 뒷면을 가까이 찍어 주세요&quot;라고 안내한다. 뒷면에 회백색 곰팡이가 보이는 사진을 추가로 올리면 두 사진의 분포를 합쳐 결과를 다시 계산한다. 이력에는 처음 사진과 두 번째 사진이 함께 남는다.</p>
+<p><strong>시나리오 C. 밭에서 통신이 안 될 때</strong>
+집 Wi-Fi에서 미리 &quot;모델 준비&quot;를 눌러 약 94MB 모델을 받아 둔다. 밭에서 데이터가 안 잡혀도 기기 진단 화면에서 사진을 찍으면 결과가 나오고 휴대폰 안에 저장된다. 집에 돌아와 &quot;서버에 저장&quot;을 누르면 기록이 올라간다.</p>
+<p><strong>시나리오 D. 단말 (목표)</strong>
+보드의 버튼을 누르고 작물을 찍으면 스피커로 결과를 듣는다. &quot;그럼 약은 뭐 써?&quot;라고 물으면 Qwen이 농약 정보 기능을 고르고, DB에 있는 등록 정보만으로 답한다.</p>
+<h2>1.4 비기능적 요구사항</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>구분</th>
+<th>요구사항</th>
+<th>현재 상황</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NFR-01</td>
+<td>성능</td>
+<td>진단 요청부터 결과 표시까지 5초 이내. 단말에서 CNN 한 장 처리(전처리 포함)는 1초 이내</td>
+<td>PC CPU 기준만 측정함 (5번 문서 5.2.3). 보드 측정은 수령 후</td>
+</tr>
+<tr>
+<td>NFR-02</td>
+<td>정확도</td>
+<td>독립 test 기준 Top-1 85% 이상, 무 혼동쌍 두 클래스 각각 85% 이상</td>
+<td>기존 모델 test 93.1%지만 무 검은무늬병 68.0%, 무 노균병 71.1%로 클래스 기준 미달. 기존 분할에 중복 이미지가 있어 재평가 필요</td>
+</tr>
+<tr>
+<td>NFR-03</td>
+<td>전력·발열</td>
+<td>단말에서 30회 연속 진단과 30분 운용 시 전력·온도·RAM 피크 기록, 서멀 스로틀링 없이 동작</td>
+<td>보드 수령 후 기준선을 잡고 수치 목표 확정</td>
+</tr>
+<tr>
+<td>NFR-04</td>
+<td>신뢰성</td>
+<td>모델이 없거나 깨지면 가짜 결과를 내지 않고 503으로 막는다. 저장 실패, 동시 수정, 중복 요청을 구분해 처리한다</td>
+<td>구현 (#19, #53, #81). 오류 코드 체계와 Idempotency-Key 적용</td>
+</tr>
+<tr>
+<td>NFR-05</td>
+<td>사용성</td>
+<td>디자인 시스템 기준을 따른다: 본문 16px 이상(큰 글씨 모드 18px), 터치 영역 48px 이상, 글자 대비 4.5:1 이상, 심각도는 색·글자·아이콘을 함께 표시, 한 화면에 행동 1~2개, 오류 화면에는 원인과 다음 행동 버튼</td>
+<td>구현 (#75, #78, #85). 오류 코드별 안내 문구는 10/17 커밋에서 Figma 시안대로 적용. 실제 고령 사용자 테스트는 아직 못 함</td>
+</tr>
+<tr>
+<td>NFR-06</td>
+<td>보안·개인정보</td>
+<td>사진의 위치정보(GPS) 등 메타데이터를 저장 전에 제거. 비밀키를 저장소에 올리지 않음. 알려진 취약 의존성은 바로 올린다</td>
+<td>HEIC·RAW 등 변환하는 사진은 제거됨(#83). JPEG/PNG 원본은 그대로 저장돼 GPS가 남을 수 있음. 10/17 로컬 커밋으로 고쳤지만 아직 PR 전 (5.2.4 참고). 의존성 보안 업데이트는 #71</td>
+</tr>
+<tr>
+<td>NFR-07</td>
+<td>확장성</td>
+<td>클래스 ID를 폴더 앞 숫자로 고정해서 작물·병해를 추가해도 기존 ID가 밀리지 않게 한다</td>
+<td>구현</td>
+</tr>
+<tr>
+<td>NFR-08</td>
+<td>배포·업데이트</td>
+<td>모델 파일 해시와 전처리 버전을 결과마다 기록. 모델 교체 후 재시작과 준비 상태 확인 절차를 문서화</td>
+<td>수동 절차 있음. OTA 자동 업데이트는 없음</td>
+</tr>
+</tbody></table></div>
+<p>정확도는 숫자 하나로 판단하지 않기로 했다. 10월 6일 256 해상도 후보는 전체 검증 정확도가 99.58%로 올랐는데, 정작 우리가 신경 쓰는 무 노균병 재현율은 79.17%에서 70.83%로 떨어졌다. 그래서 이 후보는 서비스에 넣지 않았다. 앞으로도 전체 정확도와 혼동쌍 클래스별 재현율을 같이 보고 판단한다.</p>
+<h2>1.5 환경 요구사항</h2>
+<h3>대상 하드웨어 및 OS</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>구분</th>
+<th>사양</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>목표 단말</td>
+<td>Orange Pi 5 Plus, RK3588 (Cortex-A76 ×4 + A55 ×4), NPU 6 TOPS, RAM 16GB</td>
+<td>ARM64 Linux. 정확한 OS 이미지와 NPU 드라이버 버전은 지급 이미지 확인 후 확정</td>
+</tr>
+<tr>
+<td>단말 주변장치</td>
+<td>USB 카메라, USB 마이크, 스피커, 촬영 버튼</td>
+<td>부품 예산 40만 원 안에서 구매</td>
+</tr>
+<tr>
+<td>사용자 기기</td>
+<td>Android Chrome, iOS Safari 최신 버전</td>
+<td>카메라·기기 진단은 HTTPS 필요</td>
+</tr>
+<tr>
+<td>개발 PC</td>
+<td>Windows 11, Python 3.13, Node 22</td>
+<td>팀원 각자 노트북</td>
+</tr>
+<tr>
+<td>학습 환경</td>
+<td>Google Colab Tesla T4</td>
+<td>CNN 학습, Qwen LoRA 학습</td>
+</tr>
+</tbody></table></div>
+<h3>연동 외부 시스템</h3>
+<ul>
+<li><strong>PSIS 농약안전정보시스템 OpenAPI</strong>: 등록 농약 목록을 받아 로컬 카탈로그를 갱신할 때만 쓴다. 진단할 때마다 호출하지 않으므로 오프라인에서도 저장된 카탈로그로 조회된다.</li>
+<li><strong>AI Hub 노지 작물 질병 진단 데이터</strong>: 학습용. 서비스 실행에는 필요 없다.</li>
+<li><strong>Qwen3.5-2B (Hugging Face)</strong>: 학습 시 기본 모델 다운로드에만 사용. 단말에는 변환된 모델 파일을 미리 넣는다.</li>
+</ul>
+<h2>1.6 제약사항</h2>
+<ul>
+<li><strong>일정</strong>: 2026년 2학기 14주. 7주차 중간 발표는 끝났고, 13~14주차에 최종 시연이 있다. 남은 기간이 약 5주라서 보드 이식과 LLM 통합을 동시에 진행해야 한다.</li>
+<li><strong>인력</strong>: 5명. 역할은 PM·모델(김헌영), 프론트엔드(김민서), 백엔드(박성호), 카메라·음성(고명준), 디바이스·인프라(이서하)로 나눴다. 폴더별 담당자가 PR을 리뷰한다.</li>
+<li><strong>예산</strong>: 단말 부품 40만 원 (최초 예산안 기준).</li>
+<li><strong>하드웨어</strong>: Orange Pi 보드와 RKLLM 툴킷이 아직 지급되지 않았다. 그래서 보드 관련 수치 목표는 일단 초기값으로 두고, 측정 후 다시 정한다.</li>
+<li><strong>데이터</strong>: 무 노균병 원천 사진이 다른 병보다 적고, 잎 뒷면을 가까이 찍은 사진은 거의 없다. 재촬영 기능의 실제 효과를 확인할 평가 자료를 따로 모아야 한다.</li>
+<li><strong>LLM 데이터 검수</strong>: 기능 토큰 학습 데이터는 AI 보조로 만든 초안이며, 사람 최종 검수가 끝나지 않았다. 검수 전 데이터로 얻은 정확도는 서비스 성능으로 말하지 않는다.</li>
+<li><strong>전문 지식</strong>: 판별 부위 단서(포자층, 잎맥 흑변 등)는 표준 병징 자료를 보고 정리했지만, 식물병리 전문가 확인은 받지 못했다.</li>
+</ul>
+</article></main></body></html>

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "CropCare AI",
-    "description": "AI 기반 농작물 병해충 진단 및 스마트 방제 지원 API.\n\n## 사용 순서\n1. `/api/v1/capabilities`에서 지원 작물·업로드 한도·기능을 확인합니다.\n2. `/api/v1/ready`로 실제 모델의 추론 준비 상태를 확인합니다. `/health`는 생존 확인입니다.\n3. `/api/v1/diagnose`에 JPEG/PNG 사진을 multipart로 전송합니다.\n4. 재촬영 안내가 있으면 `/api/v1/diagnose/{diagnosis_id}/refine`을 사용합니다.\n5. HTTP 200이어도 `save_status=failed`이면 `recovery_token`으로 결과 저장을 재시도합니다.\n\n## 공통 규칙\n- 현재 애플리케이션에는 인증·사용자별 이력 분리 기능이 없습니다.\n- 진단 출처는 `prediction_mode`로 확인합니다. 개발용 `mock` 결과는 실제 모델 추론이 아닙니다.\n- 처리된 HTTP 오류·입력 검증 오류·DB 오류·사진 저장 오류는\n  `detail`, `code`, `retryable`, `request_id`를 반환합니다.\n  단, `/ready`의 503은 준비 상태 객체입니다. 응답의 `X-Request-ID`로 요청을 추적합니다.\n  처리되지 않은 서버 예외의 500 응답은 일반 텍스트일 수 있으며 공통 JSON 형식을 보장하지 않습니다.\n- 사진 파일 파트에는 `image/jpeg` 또는 `image/png` Content-Type을 사용합니다.\n  서버는 `image/*` MIME과 실제 JPEG/PNG 파일 내용을 모두 확인합니다.\n  전체 요청 본문 한도는 `upload.max_bytes + 65536`바이트이며,\n  `/api/v1/offline/records`는 `upload.max_bytes * 2 + 65536`바이트입니다.\n- `Idempotency-Key`는 진단·재촬영 요청에서 선택 사항입니다. 같은 키로 동일 요청을 재전송하면\n  보관된 결과를 재사용하며, 다른 사진/작물을 보내면 409입니다.\n- `/uploads/{filename}`은 응답의 이미지 URL을 제공하는 정적 경로입니다.\n  GET/HEAD로 JPEG/PNG를 제공하며 업무 API 목록에는 포함되지 않습니다.\n- Swagger의 **Try it out**은 실제 서버를 호출하므로 진단 및 저장 요청은 기록을 생성할 수 있습니다.\n",
+    "title": "Cropy",
+    "description": "AI 기반 농작물 병해충 진단 및 스마트 방제 지원 API.\n\n## 사용 순서\n1. `/api/v1/capabilities`에서 지원 작물·업로드 한도·기능을 확인합니다.\n2. `/api/v1/ready`로 실제 모델의 추론 준비 상태를 확인합니다. `/health`는 생존 확인입니다.\n3. `/api/v1/diagnose`에 JPG/PNG, HEIC/HEIF, DNG(RAW), WebP, AVIF 사진을 multipart로 전송합니다.\n4. 재촬영 안내가 있으면 `/api/v1/diagnose/{diagnosis_id}/refine`을 사용합니다.\n5. HTTP 200이어도 `save_status=failed`이면 `recovery_token`으로 결과 저장을 재시도합니다.\n\n## 공통 규칙\n- 현재 애플리케이션에는 인증·사용자별 이력 분리 기능이 없습니다.\n- 진단 출처는 `prediction_mode`로 확인합니다. 개발용 `mock` 결과는 실제 모델 추론이 아닙니다.\n- 처리된 HTTP 오류·입력 검증 오류·DB 오류·사진 저장 오류는\n  `detail`, `code`, `retryable`, `request_id`를 반환합니다.\n  단, `/ready`의 503은 준비 상태 객체입니다. 응답의 `X-Request-ID`로 요청을 추적합니다.\n  처리되지 않은 서버 예외의 500 응답은 일반 텍스트일 수 있으며 공통 JSON 형식을 보장하지 않습니다.\n- 사진 파일 파트에는 해당 형식의 `image/*` Content-Type을 사용합니다.\n  모바일에서 MIME을 알 수 없는 경우 누락 또는 `application/octet-stream`도 허용하되 실제 파일을 디코딩해 검사합니다.\n  HEIC/HEIF·DNG·WebP·AVIF 및 긴 변 4096픽셀 초과 사진은 JPEG로 변환합니다.\n  전체 요청 본문 한도는 `upload.max_bytes + 65536`바이트이며,\n  `/api/v1/offline/records`는 `upload.max_bytes * 2 + 65536`바이트입니다.\n- `Idempotency-Key`는 진단·재촬영 요청에서 선택 사항입니다. 같은 키로 동일 요청을 재전송하면\n  보관된 결과를 재사용하며, 다른 사진/작물을 보내면 409입니다.\n- `/uploads/{filename}`은 응답의 이미지 URL을 제공하는 정적 경로입니다.\n  GET/HEAD로 JPEG/PNG를 제공하며 업무 API 목록에는 포함되지 않습니다.\n- Swagger의 **Try it out**은 실제 서버를 호출하므로 진단 및 저장 요청은 기록을 생성할 수 있습니다.\n",
     "version": "1.0.0"
   },
   "paths": {
@@ -2052,7 +2052,7 @@
             "type": "string",
             "contentMediaType": "application/octet-stream",
             "title": "File",
-            "description": "JPEG/PNG 원본 사진. 파일 파트의 Content-Type은 image/jpeg 또는 image/png 사용(image/* 필수). 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조."
+            "description": "JPG/PNG, HEIC/HEIF, DNG(RAW), WebP, AVIF 사진. image/* 또는 application/octet-stream(MIME 누락 가능). 실제 디코딩으로 검증하며 새 형식·고해상도 사진은 긴 변 4096픽셀 이하 JPEG로 변환합니다. 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조. RAW 지원은 서버 디코더가 읽을 수 있는 압축 방식에 한합니다."
           }
         },
         "type": "object",
@@ -2067,7 +2067,7 @@
             "type": "string",
             "contentMediaType": "application/octet-stream",
             "title": "File",
-            "description": "JPEG/PNG 원본 사진. 파일 파트의 Content-Type은 image/jpeg 또는 image/png 사용(image/* 필수). 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조."
+            "description": "JPG/PNG, HEIC/HEIF, DNG(RAW), WebP, AVIF 사진. image/* 또는 application/octet-stream(MIME 누락 가능). 실제 디코딩으로 검증하며 새 형식·고해상도 사진은 긴 변 4096픽셀 이하 JPEG로 변환합니다. 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조. RAW 지원은 서버 디코더가 읽을 수 있는 압축 방식에 한합니다."
           }
         },
         "type": "object",
@@ -2095,7 +2095,7 @@
             "type": "string",
             "contentMediaType": "application/octet-stream",
             "title": "File",
-            "description": "JPEG/PNG 원본 사진. 파일 파트의 Content-Type은 image/jpeg 또는 image/png 사용(image/* 필수). 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조."
+            "description": "JPG/PNG, HEIC/HEIF, DNG(RAW), WebP, AVIF 사진. image/* 또는 application/octet-stream(MIME 누락 가능). 실제 디코딩으로 검증하며 새 형식·고해상도 사진은 긴 변 4096픽셀 이하 JPEG로 변환합니다. 파일·픽셀 한도는 /api/v1/capabilities의 upload 참조. RAW 지원은 서버 디코더가 읽을 수 있는 압축 방식에 한합니다."
           },
           "refined_file": {
             "anyOf": [
@@ -2167,7 +2167,7 @@
               "배추"
             ],
             "decision": {
-              "confusion_margin": 0.2,
+              "confusion_margin": null,
               "confusion_pairs": [
                 [
                   2,
@@ -2179,7 +2179,7 @@
                 ]
               ],
               "low_confidence_threshold": 0.5,
-              "second_photo_weight": 0.6,
+              "second_photo_weight": null,
               "version": "decision-v1"
             },
             "execution": {
@@ -2192,10 +2192,15 @@
             "upload": {
               "formats": [
                 "JPEG",
-                "PNG"
+                "PNG",
+                "HEIC",
+                "HEIF",
+                "DNG",
+                "WEBP",
+                "AVIF"
               ],
-              "max_bytes": 10485760,
-              "max_pixels": 40000000
+              "max_bytes": 104857600,
+              "max_pixels": 210000000
             }
           }
         ]
@@ -3520,11 +3525,16 @@
             },
             "type": "array",
             "title": "Formats",
-            "description": "허용 이미지 형식",
+            "description": "허용 이미지 형식(RAW 압축 방식은 디코더 지원에 따름)",
             "examples": [
               [
                 "JPEG",
-                "PNG"
+                "PNG",
+                "HEIC",
+                "HEIF",
+                "DNG",
+                "WEBP",
+                "AVIF"
               ]
             ]
           },

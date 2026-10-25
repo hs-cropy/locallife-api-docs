@@ -1,0 +1,609 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>03 모델 설계 및 최적화 문서 · Cropy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"><style>:root{--bg:#F6F4EC;--card:#FFFEF9;--ink:#1E2A22;--body:#3E4A42;--muted:#6B766E;--green:#2E8B57;--dark:#1F3B2C;--line:#E3E6DC}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.75;word-break:keep-all}
+header{background:var(--dark);color:#F6F4EC;padding:14px 16px}header .in{max-width:960px;margin:0 auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap}header a{color:#F2B33D;text-decoration:none;font-weight:700}header nav{display:flex;gap:12px;flex-wrap:wrap;font-size:14px}header nav a{color:#CFE0D4;font-weight:500}
+main{max-width:960px;margin:0 auto;padding:32px 16px 80px}article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 24px}
+h1{font-size:30px;line-height:1.3;margin:0 0 16px}h2{font-size:23px;margin:40px 0 12px;padding-top:12px;border-top:2px solid var(--line);color:var(--dark)}h3{font-size:19px;margin:28px 0 8px}h4{font-size:17px}
+p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1E8;padding:1px 5px;border-radius:4px;font-size:.92em}pre{background:#1E2A22;color:#E8EFE9;padding:14px;border-radius:10px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}
+.tw{overflow-x:auto;margin:12px 0}table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}th{background:#EEF1E8}tr:nth-child(even) td{background:#FBFAF5}
+.note{background:#FFF4D9;border-radius:10px;padding:10px 14px;font-size:14px;color:#5A4A1E;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-decoration:none;color:var(--ink)}.card:hover{border-color:var(--green)}.card b{display:block;font-size:18px;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}</style></head><body><header><div class="in"><a href="../index.html">Cropy 문서</a><nav><a href="../reports/requirements.html">01 요구사항 정의서</a><a href="../reports/architecture.html">02 아키텍처 설계서</a><a href="../reports/model.html">03 모델 설계 및 최적화 문서</a><a href="../reports/api-interface.html">04 API 및 인터페이스 정의서</a><a href="../reports/test-report.html">05 테스트 계획서 및 결과 보고서</a><a href="../reports/deployment.html">06 배포 및 통합 가이드</a><a href="../swagger.html">Swagger</a><a href="../api-docs.html">API 문서</a></nav></div></header><main><p class="note">3팀 크래파스 · 2026 모바일시스템응용프로젝트 9주차 개발 문서 공개본입니다. 특허 출원 전인 재촬영 판정 기준 수치는 공개본에서 생략했습니다.</p><article><h1>Cropy 모델 설계 및 최적화 문서</h1>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>팀</td>
+<td>3팀 크래파스</td>
+</tr>
+<tr>
+<td>작성일</td>
+<td>2026-10-25</td>
+</tr>
+<tr>
+<td>담당</td>
+<td>김헌영 (모델·데이터)</td>
+</tr>
+<tr>
+<td>기준</td>
+<td><code>develop</code> <code>f81534e</code>, 서비스 체크포인트 SHA-256 <code>b0b0b4a2…4d8b8b</code></td>
+</tr>
+</tbody></table></div>
+<h2>3.1 문서 개요</h2>
+<p>Cropy에 들어가는 두 모델을 다룬다.</p>
+<ul>
+<li><strong>CNN 병해 분류 모델</strong>: 사진을 보고 9개 클래스 중 하나로 분류한다. 지금 서비스에서 실제로 쓰고 있다.</li>
+<li><strong>Qwen3.5-2B 기능 선택 모델</strong>: 사용자 질문을 보고 어떤 기능을 부를지 고른다. Colab에서 학습 실험 중이고 아직 서비스에 연결하지 않았다.</li>
+</ul>
+<p>어떤 모델을 왜 골랐는지, 어떤 데이터로 어떻게 학습했는지, 단말에 올리려면 얼마나 줄여야 하는지를 기록한다. 실험 결과는 develop에 병합된 ML PR(#22<del>#24, #55, #59</del>#61)과 그 PR에 들어간 보고서를 근거로 했다. 10월 13일 이후의 일부 실험(CNN 방향 민감성 조사, Qwen v17·v18·diagnostic32)은 아직 로컬 기록만 있고 GitHub에 올리지 않았기 때문에 표에 따로 표시했다.</p>
+<h2>3.2 모델 선정 및 개요</h2>
+<h3>CNN: ResNet50 (ImageNet 사전학습 + 미세조정)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>구조</td>
+<td>ResNet50, 마지막 FC를 9클래스로 교체</td>
+</tr>
+<tr>
+<td>입력</td>
+<td>224×224 RGB, ImageNet 평균·표준편차 정규화</td>
+</tr>
+<tr>
+<td>출력</td>
+<td>9클래스 softmax 전체 분포</td>
+</tr>
+<tr>
+<td>파일</td>
+<td><code>best_model.pth</code>, 94,420,689바이트</td>
+</tr>
+<tr>
+<td>보조 모델</td>
+<td>무 혼동쌍 전용 ResNet18 2클래스(<code>pair_mu.pth</code>), 기본 꺼짐</td>
+</tr>
+</tbody></table></div>
+<p>학습 스크립트(<code>ml/train.py</code>)는 <code>--arch resnet18|resnet50</code>을 모두 지원하고, 백엔드도 체크포인트에 적힌 구조를 보고 알아서 불러온다. 본 모델은 ResNet50을, 무 혼동쌍 보조 모델은 더 가벼운 ResNet18을 쓴다.</p>
+<p>ResNet50을 고른 이유는 세 가지다. ImageNet 사전학습 가중치로 적은 데이터에서도 미세조정이 잘 되고, 연산이 Conv·BN·ReLU 위주라 RKNN Toolkit으로 NPU 변환할 때 막힐 가능성이 낮다. 그리고 약 94MB라서 16GB 단말에 올리기에는 부담이 크지 않다. 경량 구조(MobileNet 계열 등)와의 비교는 아직 하지 않았다. 단말 CPU에서 1초 목표를 못 맞추면 그때 양자화와 함께 비교한다.</p>
+<p><strong>클래스 정의.</strong> 폴더 이름 앞 숫자를 그대로 <code>model_class_id</code>로 쓰고, 이 값으로 DB의 <code>diseases</code> 표와 연결한다. ImageFolder의 정렬 순서에 기대지 않기 때문에 나중에 클래스를 추가해도 기존 번호가 밀리지 않는다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>클래스</th>
+<th>ID</th>
+<th>클래스</th>
+<th>ID</th>
+<th>클래스</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>고추 탄저병</td>
+<td>3</td>
+<td>무 노균병</td>
+<td>6</td>
+<td>고추 정상</td>
+</tr>
+<tr>
+<td>1</td>
+<td>고추 흰가루병</td>
+<td>4</td>
+<td>배추 검은썩음병</td>
+<td>7</td>
+<td>무 정상</td>
+</tr>
+<tr>
+<td>2</td>
+<td>무 검은무늬병</td>
+<td>5</td>
+<td>배추 노균병</td>
+<td>8</td>
+<td>배추 정상</td>
+</tr>
+</tbody></table></div>
+<h3>LLM: Qwen3.5-2B 기능 선택</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>기본 모델</td>
+<td><code>Qwen/Qwen3.5-2B</code>, revision <code>15852e8c…</code> 고정</td>
+</tr>
+<tr>
+<td>역할</td>
+<td>질문 → 기능 토큰 + 인자 토큰 + 종료 토큰</td>
+</tr>
+<tr>
+<td>기능</td>
+<td>진단 결과, 예측 점수 해석, 재촬영 안내, 관리·예방, 농약 정보, 확인 질문, 기기 사용 안내, 범위 제한 (8개)</td>
+</tr>
+<tr>
+<td>특수 토큰</td>
+<td>58개 (기능·인자·종료)</td>
+</tr>
+<tr>
+<td>출력 예</td>
+<td><code>&lt;hs_get_usage_guidance&gt;&lt;hs_topic_next_step&gt;&lt;hs_delivery_brief&gt;&lt;hs-end&gt;</code></td>
+</tr>
+</tbody></table></div>
+<p>처음 계획은 Qwen이 진단 결과를 보고 설명 문장을 직접 쓰게 하는 것이었다. 그런데 2B 모델이 농약 이름이나 희석배수를 그럴듯하게 지어내면 실제 피해로 이어질 수 있다. 그래서 10월 초 데이터 초안부터 방향을 바꿔, 모델은 &quot;무슨 기능을 부를지&quot;만 고르고 실제 문장은 DB 값을 넣은 handler가 만들게 했다. 특강 1에서 소개된 전용 함수 호출 토큰 방식을 적용한 것이다.</p>
+<p>2B를 고른 이유는 RK3588 NPU에서 돌릴 수 있는 크기이면서 한국어가 어느 정도 되기 때문이다. 강의 자료의 한국어 비교에서도 첫 후보로 나왔다. 더 큰 모델은 2B가 반복적으로 실패하고 메모리가 남을 때만 검토한다.</p>
+<h2>3.3 데이터셋 구성</h2>
+<h3>CNN 데이터</h3>
+<p>출처는 AI Hub 「노지 작물 질병 진단」 데이터다. 이 데이터로 학습셋을 두 번 만들었다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>버전</th>
+<th>시기</th>
+<th>구성</th>
+<th>문제점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>기존 분할</td>
+<td>9월 초</td>
+<td>train 2,972 / val 637 / test 637, 정상은 클래스당 200장으로 제한</td>
+<td>9/18 감사에서 train↔val 동일 이미지 2쌍, train↔test 4쌍 발견 (#23)</td>
+</tr>
+<tr>
+<td>작업자 분리 분할</td>
+<td>9월 21일</td>
+<td>train 2,739 / val 785 / test 722. 같은 촬영 작업자 사진이 여러 분할에 섞이지 않게 나눔</td>
+<td>정상 사진이 모두 공식 Validation에만 있어서 따로 처리 필요</td>
+</tr>
+<tr>
+<td>전체 공식 분할</td>
+<td>10월 초</td>
+<td>train 32,513 / val 4,070, 총 36,583장. 동일 바이트·픽셀 중복 0건</td>
+<td>정상이 검증셋의 88.30%. 독립 test 없음</td>
+</tr>
+</tbody></table></div>
+<p>전체 공식 분할의 클래스별 수량은 아래와 같다. 무 노균병이 학습 227장, 검증 24장밖에 안 된다는 게 이후 모든 판단에 영향을 줬다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>클래스</th>
+<th align="right">학습</th>
+<th align="right">검증</th>
+<th>클래스</th>
+<th align="right">학습</th>
+<th align="right">검증</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>고추 탄저병</td>
+<td align="right">967</td>
+<td align="right">117</td>
+<td>배추 노균병</td>
+<td align="right">456</td>
+<td align="right">37</td>
+</tr>
+<tr>
+<td>고추 흰가루병</td>
+<td align="right">912</td>
+<td align="right">112</td>
+<td>고추 정상</td>
+<td align="right">8,575</td>
+<td align="right">1,110</td>
+</tr>
+<tr>
+<td>무 검은무늬병</td>
+<td align="right">462</td>
+<td align="right">76</td>
+<td>무 정상</td>
+<td align="right">10,797</td>
+<td align="right">1,301</td>
+</tr>
+<tr>
+<td>무 노균병</td>
+<td align="right">227</td>
+<td align="right">24</td>
+<td>배추 정상</td>
+<td align="right">9,316</td>
+<td align="right">1,183</td>
+</tr>
+<tr>
+<td>배추 검은썩음병</td>
+<td align="right">801</td>
+<td align="right">110</td>
+<td><strong>합계</strong></td>
+<td align="right"><strong>32,513</strong></td>
+<td align="right"><strong>4,070</strong></td>
+</tr>
+</tbody></table></div>
+<p><strong>전처리.</strong> 원본 사진은 크기가 제각각이라 Colab 전달용으로 긴 변 512픽셀 사본을 만들었다(원본은 따로 보관). 학습 입력은 이 사본을 256 또는 384로 줄여 쓴다. 폴더 이름의 <code>full512</code>는 입력 크기가 아니라 이 사본 크기다.</p>
+<p><strong>증강.</strong> RandomResizedCrop(scale 0.7~1.0), 좌우 반전, ±15° 회전, 밝기·대비 0.3·채도 0.2 ColorJitter를 쓴다. 클래스 불균형은 역빈도 WeightedRandomSampler로 맞춘다.</p>
+<h3>LLM 데이터</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>버전</th>
+<th>내용</th>
+<th>상태</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>v1~v5</td>
+<td>기능별 400개씩 7기능 2,800개 싱글턴 초안</td>
+<td>AI 보조로 작성</td>
+</tr>
+<tr>
+<td>v6</td>
+<td>검수 매뉴얼 기준 AI 검수: 문제 없음 2,239 / 보류 397 / 불합격 164</td>
+<td>사람 승인 0개</td>
+</tr>
+<tr>
+<td>v7</td>
+<td>불합격 164개 정답 수정</td>
+<td>draft</td>
+</tr>
+<tr>
+<td>v8~v11</td>
+<td>수량 조정, 복합 요청 정리, 사람 검수표</td>
+<td>사람 검수 진행 중</td>
+</tr>
+<tr>
+<td>사용흐름 v12</td>
+<td>기기 사용 안내 기능 추가(8기능), 다중 턴 포함 학습 후보 94행 / 검증 24행</td>
+<td>실험용</td>
+</tr>
+</tbody></table></div>
+<p>데이터 시트와 검수 이력은 #60에, 파일럿 실행기와 파서 테스트 156개는 #61에 들어가 있다. 학습 입력에는 사용자 발화와 화면 상태(작물 선택, 진단 상태, 신뢰도, 재촬영 여부 등)만 넣고, 정답·검수 메모·분할 정보는 빼도록 검사한다. 같은 사진이나 같은 기준 문장에서 나온 질문은 같은 분할에 묶어 학습과 검증에 비슷한 문제가 들어가지 않게 했다.</p>
+<h2>3.4 모델 학습 및 평가 전략</h2>
+<h3>CNN 학습 파라미터</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>기존 기본 모델</th>
+<th>전체 데이터 학습</th>
+<th>256/384 미세조정</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>입력</td>
+<td>224</td>
+<td>256</td>
+<td>256 / 384</td>
+</tr>
+<tr>
+<td>에폭</td>
+<td>20</td>
+<td>20 (3에폭 선택)</td>
+<td>추가 5</td>
+</tr>
+<tr>
+<td>배치</td>
+<td>32</td>
+<td>16</td>
+<td>16</td>
+</tr>
+<tr>
+<td>학습률</td>
+<td>AdamW, cosine</td>
+<td>1e-4</td>
+<td>1e-5</td>
+</tr>
+<tr>
+<td>정규화</td>
+<td>weight decay 1e-4, label smoothing 0.1</td>
+<td>동일</td>
+<td>동일</td>
+</tr>
+<tr>
+<td>모델 선택</td>
+<td>검증 정확도</td>
+<td>검증 Macro F1</td>
+<td>검증 Macro F1</td>
+</tr>
+<tr>
+<td>환경</td>
+<td>Colab T4</td>
+<td>Colab T4, PyTorch 2.11.0+cu130</td>
+<td>동일</td>
+</tr>
+</tbody></table></div>
+<p>모델 선택 기준을 정확도에서 Macro F1로 바꾼 건 전체 데이터에서 정상 사진이 88%를 넘기 때문이다. 정상만 잘 맞혀도 정확도가 높게 나와서 병해 클래스 성능을 가려 버린다.</p>
+<h3>평가 지표</h3>
+<ul>
+<li>전체 정확도, Macro F1</li>
+<li>클래스별 정밀도·재현율, 특히 무 검은무늬병·무 노균병 재현율</li>
+<li>혼동행렬에서 2↔3, 4↔5 오분류 건수</li>
+<li>추론 시간(첫 실행과 예열 후 중앙값·p95 분리), 메모리</li>
+</ul>
+<h3>지금까지의 결과</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>날짜</th>
+<th>실험</th>
+<th>결과</th>
+<th>판단</th>
+<th>근거</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>9/3</td>
+<td>기존 분할 ResNet50 224</td>
+<td>val 94.7% / test 93.1%. 무 검은무늬병 68.0%, 무 노균병 71.1%. 오분류 44건 중 26건이 무 두 병 사이</td>
+<td>서비스 모델로 채택. 무 혼동이 재촬영 기능의 출발점</td>
+<td>초기 커밋</td>
+</tr>
+<tr>
+<td>9/18</td>
+<td>일반·균형 샘플링 이어학습 각 12에폭</td>
+<td>둘 다 시작 모델 val 96.23%(축소 번들 기준)를 못 넘음</td>
+<td>교체 안 함</td>
+<td>#22</td>
+</tr>
+<tr>
+<td>9/18</td>
+<td>분할 독립성 감사</td>
+<td>중복 6쌍 발견</td>
+<td>기존 93.1%를 독립 성능으로 보지 않기로 함</td>
+<td>#23</td>
+</tr>
+<tr>
+<td>9/22</td>
+<td>작업자 분리 224 vs 256</td>
+<td>val 721 → 726/785</td>
+<td>256이 약간 나음. 단일 seed라 확정 안 함</td>
+<td>#24</td>
+</tr>
+<tr>
+<td>10/6</td>
+<td>전체 데이터 256 기준 모델</td>
+<td>val 99.43%, Macro F1 0.9608, 무 노균병 19/24</td>
+<td>실험 기준선</td>
+<td>#59</td>
+</tr>
+<tr>
+<td>10/6</td>
+<td>256 미세조정</td>
+<td>val 99.58%, Macro F1 0.9624, 무 노균병 <strong>17/24</strong></td>
+<td>전체는 좋아졌지만 목표 병이 나빠져 교체 보류</td>
+<td>#59</td>
+</tr>
+<tr>
+<td>10/6</td>
+<td>384 미세조정</td>
+<td>val 99.56%, Macro F1 0.9600, 무 노균병 <strong>15/24</strong></td>
+<td>채택 안 함</td>
+<td>#59</td>
+</tr>
+<tr>
+<td>10/13</td>
+<td>무 혼동 원인 조사 (로컬)</td>
+<td>같은 사진을 좌우 반전만 했는데 검은무늬병 88% → 노균병 80%로 뒤집힌 사례 확인</td>
+<td>&quot;데이터 수 부족&quot; 하나로 설명하던 것을 정정</td>
+<td>로컬 기록</td>
+</tr>
+</tbody></table></div>
+<p>10월 6일 결과가 가장 고민이 많았다. 숫자만 보면 256 미세조정이 제일 좋은데, 우리가 풀려고 했던 무 노균병은 24장 중 2장을 더 놓쳤다. 서비스에서 노균병을 검은무늬병으로 잘못 알려 주면 약 선택이 달라지기 때문에, 전체 지표가 좋아도 교체하지 않았다. 지금 서비스 모델은 여전히 9월 초의 224 모델이다.</p>
+<h3>Qwen 학습 설정과 결과</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>방식</td>
+<td>LoRA (r=8, alpha=16, dropout 0.05, q_proj·v_proj) + 특수 토큰 임베딩 학습</td>
+</tr>
+<tr>
+<td>양자화 학습</td>
+<td>NF4 4bit, double quantization</td>
+</tr>
+<tr>
+<td>정밀도</td>
+<td>T4 FP16, loss scale 32로 고정</td>
+</tr>
+<tr>
+<td>배치</td>
+<td>1, gradient accumulation 4, 학습률 2e-4</td>
+</tr>
+<tr>
+<td>loss</td>
+<td>현재 턴의 정답 호출 토큰에만 계산</td>
+</tr>
+</tbody></table></div>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>실험</th>
+<th align="right">학습 표본</th>
+<th align="right">학습량</th>
+<th align="right">검증 함수 선택</th>
+<th align="right">검증 전체 일치</th>
+<th>기록</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>v11</td>
+<td align="right">112</td>
+<td align="right">20 step</td>
+<td align="right">0/28</td>
+<td align="right">0/28</td>
+<td>로컬</td>
+</tr>
+<tr>
+<td>v12</td>
+<td align="right">112</td>
+<td align="right">100 step</td>
+<td align="right">16/28</td>
+<td align="right">1/28</td>
+<td>로컬</td>
+</tr>
+<tr>
+<td>v14</td>
+<td align="right">224</td>
+<td align="right">200 step</td>
+<td align="right">23/28</td>
+<td align="right">10/28</td>
+<td>로컬</td>
+</tr>
+<tr>
+<td>v18</td>
+<td align="right">224</td>
+<td align="right">400 step</td>
+<td align="right">27/28</td>
+<td align="right">18/28</td>
+<td>로컬</td>
+</tr>
+<tr>
+<td>pilot50</td>
+<td align="right">94</td>
+<td align="right">50 step</td>
+<td align="right">10/24</td>
+<td align="right">3/24</td>
+<td>로컬</td>
+</tr>
+<tr>
+<td>diagnostic32</td>
+<td align="right">32</td>
+<td align="right">정상 업데이트 100회</td>
+<td align="right">21/24</td>
+<td align="right">12/24</td>
+<td>로컬</td>
+</tr>
+</tbody></table></div>
+<p>함수는 대부분 맞히는데 인자가 자주 틀린다. 예를 들어 &quot;점수가 몇 퍼센트예요?&quot;(confidence)와 &quot;그 점수로 확정할 수 있어요?&quot;(limits)를 헷갈린다. pilot50에서는 모든 입력에 같은 답 하나만 내는 문제가 있었는데, 원인을 찾아보니 FP16 loss scale 65536에서 처음 11스텝의 gradient가 NaN으로 터져 업데이트가 건너뛰어지고 있었다. scale을 32로 낮춘 비교 검사에서 3배치 모두 gradient가 정상으로 나왔고, 이후 diagnostic32에서는 100회 업데이트 중 건너뜀이 0회였다.</p>
+<p>검증셋이 24~28행으로 작고 여러 실험에서 반복해 봤기 때문에 위 수치를 서비스 성능으로 쓰지 않는다. 사람 검수도 끝나지 않았다.</p>
+<h2>3.5 모델 경량화 및 최적화 방안</h2>
+<h3>현재 상태</h3>
+<p>아직 경량화는 하지 않았다. 브라우저 기기 진단용으로 FP32 ONNX 변환만 해 두었다(#55). 같은 입력 텐서 3개로 PyTorch와 비교했을 때 logit 최대 차이가 1.4×10⁻⁶이었다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>산출물</th>
+<th align="right">크기</th>
+<th>정밀도</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PyTorch <code>best_model.pth</code></td>
+<td align="right">94.4MB</td>
+<td>FP32</td>
+</tr>
+<tr>
+<td>ONNX <code>cnn-44441d36….onnx</code></td>
+<td align="right">94.0MB</td>
+<td>FP32</td>
+</tr>
+<tr>
+<td>RKNN <code>.rknn</code></td>
+<td align="right">-</td>
+<td>계획 (INT8)</td>
+</tr>
+<tr>
+<td>Qwen LoRA 어댑터</td>
+<td align="right">수 MB 수준</td>
+<td>학습 결과</td>
+</tr>
+<tr>
+<td>Qwen <code>.rkllm</code></td>
+<td align="right">-</td>
+<td>계획 (W8A8)</td>
+</tr>
+</tbody></table></div>
+<h3>CNN 경량화 계획</h3>
+<p>진행 순서는 &quot;먼저 재 보고, 모자라면 줄인다&quot;다.</p>
+<ol>
+<li>보드에서 지금 PyTorch 모델을 CPU로 돌려 기준선을 잡는다.</li>
+<li>단건 1초 목표를 넘기면 스레드 수 조정 → ONNX Runtime CPU → RKNN INT8 순으로 비교한다.</li>
+<li>RKNN INT8 변환 시 캘리브레이션 이미지는 학습셋에서 클래스당 30<del>60장, 총 300</del>500장을 뽑는다. 검증·테스트 사진은 캘리브레이션에 쓰지 않는다.</li>
+<li>채택 기준은 전체 정확도 하락 1.5%p 이내, 클래스별 하락 3%p 이내다. 무 노균병 재현율이 떨어지면 전체 기준을 통과해도 다시 검토한다.</li>
+</ol>
+<p>가지치기(pruning)와 지식 증류는 이번 학기 계획에 넣지 않았다. INT8만으로도 크기는 약 1/4로 줄 것으로 보고 있고, 증류는 학습을 처음부터 다시 해야 해서 남은 일정에 무리라고 판단했다. INT8에서 정확도가 많이 떨어지면 혼합 정밀도나 QAT를 검토한다.</p>
+<h3>Qwen 경량화 계획</h3>
+<p>학습할 때 이미 NF4 4bit로 올려서 LoRA를 붙이고 있다. 배포는 다음 순서다.</p>
+<pre><code class="language-text">Qwen3.5-2B + LoRA 어댑터 → 병합(FP16) → RKLLM Toolkit W8A8 변환 → .rkllm → 보드 RKLLM runtime
+</code></pre>
+<p>변환 후에는 원본·학습본·양자화본을 같은 질문 세트로 돌려 기능 선택 정확도, 첫 토큰 지연, 초당 생성 토큰, RAM을 비교한다. 출력이 토큰 3<del>4개라 생성 속도보다 첫 토큰 지연(프롬프트 처리)이 체감 속도를 좌우할 것으로 본다. 현재 입력 길이가 531</del>725토큰이라, 시스템 프롬프트를 줄이는 것도 최적화 항목에 넣었다.</p>
+<h3>최적화 목표치</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>CNN 목표</th>
+<th>Qwen 목표</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모델 크기</td>
+<td>30MB 이하 (INT8 시)</td>
+<td>3GB 이하</td>
+</tr>
+<tr>
+<td>메모리</td>
+<td>프로세스 RSS 1GB 이하</td>
+<td>전체 스택 합계가 16GB 안에서 여유 4GB 이상</td>
+</tr>
+<tr>
+<td>지연</td>
+<td>단건 1초 이내 (전처리 포함)</td>
+<td>질문 후 기능 선택까지 2초 이내</td>
+</tr>
+<tr>
+<td>전력</td>
+<td>30분 연속 운용 시 서멀 스로틀링 없음</td>
+<td>동일</td>
+</tr>
+</tbody></table></div>
+<p>Qwen 목표는 아직 근거가 약한 초기값이다. 보드에서 기본 예제를 돌려 본 뒤 다시 정한다.</p>
+<h2>3.6 추론 엔진 및 런타임 환경</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>실행 위치</th>
+<th>엔진</th>
+<th>모델 형식</th>
+<th>상태</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>서버·단말 백엔드</td>
+<td>PyTorch 2.13.0 CPU 빌드</td>
+<td><code>.pth</code></td>
+<td>사용 중</td>
+</tr>
+<tr>
+<td>휴대폰 브라우저</td>
+<td>ONNX Runtime Web 1.30 (WASM, CPU)</td>
+<td><code>.onnx</code></td>
+<td>사용 중</td>
+</tr>
+<tr>
+<td>단말 NPU (CNN)</td>
+<td>RKNN runtime (RKNN Toolkit 2로 변환)</td>
+<td><code>.rknn</code></td>
+<td>계획</td>
+</tr>
+<tr>
+<td>단말 NPU (LLM)</td>
+<td>RKLLM runtime</td>
+<td><code>.rkllm</code></td>
+<td>계획. 툴킷 지급 대기</td>
+</tr>
+<tr>
+<td>학습</td>
+<td>PyTorch 2.11.0+cu130, Transformers 5.19.0, PEFT 0.21.2</td>
+<td>-</td>
+<td>Colab T4</td>
+</tr>
+</tbody></table></div>
+<p>백엔드는 체크포인트를 불러올 때 구조(arch), 클래스 수, 클래스 이름 형식, 가중치 유한성을 검사하고 파일의 SHA-256을 계산해 결과마다 <code>model_version</code>으로 남긴다. 그래서 어떤 결과가 어떤 모델에서 나왔는지 나중에 추적할 수 있다. RKNN으로 바꾸더라도 이 출력 계약(9클래스 전체 분포, 같은 클래스 ID)은 유지해야 재촬영 융합과 이력이 그대로 동작한다.</p>
+</article></main></body></html>

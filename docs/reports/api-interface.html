@@ -1,0 +1,658 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>04 API 및 인터페이스 정의서 · Cropy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"><style>:root{--bg:#F6F4EC;--card:#FFFEF9;--ink:#1E2A22;--body:#3E4A42;--muted:#6B766E;--green:#2E8B57;--dark:#1F3B2C;--line:#E3E6DC}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.75;word-break:keep-all}
+header{background:var(--dark);color:#F6F4EC;padding:14px 16px}header .in{max-width:960px;margin:0 auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap}header a{color:#F2B33D;text-decoration:none;font-weight:700}header nav{display:flex;gap:12px;flex-wrap:wrap;font-size:14px}header nav a{color:#CFE0D4;font-weight:500}
+main{max-width:960px;margin:0 auto;padding:32px 16px 80px}article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 24px}
+h1{font-size:30px;line-height:1.3;margin:0 0 16px}h2{font-size:23px;margin:40px 0 12px;padding-top:12px;border-top:2px solid var(--line);color:var(--dark)}h3{font-size:19px;margin:28px 0 8px}h4{font-size:17px}
+p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1E8;padding:1px 5px;border-radius:4px;font-size:.92em}pre{background:#1E2A22;color:#E8EFE9;padding:14px;border-radius:10px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}
+.tw{overflow-x:auto;margin:12px 0}table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}th{background:#EEF1E8}tr:nth-child(even) td{background:#FBFAF5}
+.note{background:#FFF4D9;border-radius:10px;padding:10px 14px;font-size:14px;color:#5A4A1E;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-decoration:none;color:var(--ink)}.card:hover{border-color:var(--green)}.card b{display:block;font-size:18px;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}</style></head><body><header><div class="in"><a href="../index.html">Cropy 문서</a><nav><a href="../reports/requirements.html">01 요구사항 정의서</a><a href="../reports/architecture.html">02 아키텍처 설계서</a><a href="../reports/model.html">03 모델 설계 및 최적화 문서</a><a href="../reports/api-interface.html">04 API 및 인터페이스 정의서</a><a href="../reports/test-report.html">05 테스트 계획서 및 결과 보고서</a><a href="../reports/deployment.html">06 배포 및 통합 가이드</a><a href="../swagger.html">Swagger</a><a href="../api-docs.html">API 문서</a></nav></div></header><main><p class="note">3팀 크래파스 · 2026 모바일시스템응용프로젝트 9주차 개발 문서 공개본입니다. 특허 출원 전인 재촬영 판정 기준 수치는 공개본에서 생략했습니다.</p><article><h1>Cropy API 및 인터페이스 정의서</h1>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>팀</td>
+<td>3팀 크래파스</td>
+</tr>
+<tr>
+<td>작성일</td>
+<td>2026-10-25</td>
+</tr>
+<tr>
+<td>기준 코드</td>
+<td><code>develop</code> <code>f81534e</code> (<code>backend/app/api/routes/</code>, <code>backend/app/schemas/</code>)</td>
+</tr>
+<tr>
+<td>원본 명세</td>
+<td>실행 중인 서버의 <code>/openapi.json</code>, 저장소의 <code>docs/api/openapi.json</code></td>
+</tr>
+</tbody></table></div>
+<h2>4.1 문서 개요</h2>
+<p>Cropy의 각 부분이 서로 어떤 형식으로 데이터를 주고받는지 정의한다. 대상은 세 가지다.</p>
+<ol>
+<li>프론트엔드·단말 에이전트가 부르는 <strong>백엔드 REST API</strong> (업무 API 12개)</li>
+<li>백엔드 안에서 <strong>CNN 모델과 진단 서비스 사이</strong>의 함수 계약</li>
+<li>진단 결과를 <strong>LLM에 넘기는 입력 계약</strong>과 응답 계약</li>
+</ol>
+<p>API 경로와 필드는 코드에서 직접 확인했다. 9월 3일 김헌영이 만든 첫 백엔드에는 진단·재촬영·이력·병해·헬스 API만 있었고, 이후 10월 8일 Figma 디자인을 기준으로 필요한 API를 검토하면서 판정 상태, 저장 복구, 기능 조회, 오프라인 동기화가 추가됐다(#53). <code>/ready</code>는 박성호가 추가했고(#67), 10월 15일 입력·저장 오류 코드를 OpenAPI 명세와 맞추는 정리를 했다(#81).</p>
+<h2>4.2 인터페이스 개요</h2>
+<h3>대상 시스템 및 모듈</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>호출하는 쪽</th>
+<th>호출받는 쪽</th>
+<th>방식</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>웹앱 화면 (Next.js)</td>
+<td>백엔드</td>
+<td>HTTP, 같은 출처 <code>/api/v1/*</code> (Next.js rewrite로 프록시)</td>
+</tr>
+<tr>
+<td>기기 진단 화면 (<code>/offline/</code>)</td>
+<td>백엔드</td>
+<td>HTTP, 모델 묶음 조회와 기록 동기화만</td>
+</tr>
+<tr>
+<td>단말 에이전트 (계획)</td>
+<td>백엔드</td>
+<td>HTTP, <code>localhost:8000</code></td>
+</tr>
+<tr>
+<td>진단 서비스</td>
+<td>CNN 추론 모듈</td>
+<td>같은 Python 프로세스 안의 함수 호출</td>
+</tr>
+<tr>
+<td>진단 서비스</td>
+<td>LLM 안내 모듈</td>
+<td>같은 프로세스 안의 비동기 함수 호출, LLM 런타임은 주입</td>
+</tr>
+<tr>
+<td>동기화 스크립트</td>
+<td>PSIS OpenAPI</td>
+<td>HTTPS, 수동 실행</td>
+</tr>
+</tbody></table></div>
+<h3>전체 구조</h3>
+<pre><code class="language-text"> [화면]                 [백엔드 /api/v1]                   [내부 모듈]
+ 촬영·결과 ───────▶ POST /diagnose ─────────────▶ 이미지 검증 → CNN → 판정 정책 → DB
+            ───────▶ POST /diagnose/{id}/refine ─▶ 2차 추론 → 분포 융합 → DB 갱신
+            ───────▶ POST /results/{token}/save ─▶ .pending 초안 → DB
+ 이력 ───────────▶ GET /history, /history/{id}
+ 병해 정보 ──────▶ GET /diseases, /diseases/{id}
+ 상태 확인 ──────▶ GET /health, /ready, /capabilities
+ 기기 진단 ──────▶ GET /offline/manifest, POST /offline/records
+                                                   진단 결과 → DiagnosisLLMInput → LLM 안내(계획)
+</code></pre>
+<h2>4.3 API 목록 및 상세 정의</h2>
+<p>Base URL은 <code>/api/v1</code>이다. ID는 이 문서에서 붙인 번호다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>메서드</th>
+<th>경로</th>
+<th>기능</th>
+<th>주요 입력</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>API-01</td>
+<td>POST</td>
+<td><code>/diagnose</code></td>
+<td>사진 진단</td>
+<td>multipart <code>file</code>, query <code>crop_type</code>, 헤더 <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td>API-02</td>
+<td>POST</td>
+<td><code>/diagnose/{diagnosis_id}/refine</code></td>
+<td>판별 부위 사진으로 재확정</td>
+<td>경로 ID, multipart <code>file</code>, <code>Idempotency-Key</code></td>
+</tr>
+<tr>
+<td>API-03</td>
+<td>POST</td>
+<td><code>/results/{token}/save</code></td>
+<td>저장 실패 결과 다시 저장</td>
+<td>경로 <code>recovery_token</code></td>
+</tr>
+<tr>
+<td>API-04</td>
+<td>GET</td>
+<td><code>/history</code></td>
+<td>이력 목록</td>
+<td><code>page</code>, <code>size</code>, <code>crop_type</code>, <code>severity</code></td>
+</tr>
+<tr>
+<td>API-05</td>
+<td>GET</td>
+<td><code>/history/{diagnosis_id}</code></td>
+<td>이력 상세</td>
+<td>경로 ID</td>
+</tr>
+<tr>
+<td>API-06</td>
+<td>GET</td>
+<td><code>/diseases</code></td>
+<td>병해·정상 클래스 목록</td>
+<td><code>q</code>, <code>crop_type</code></td>
+</tr>
+<tr>
+<td>API-07</td>
+<td>GET</td>
+<td><code>/diseases/{disease_id}</code></td>
+<td>클래스 상세</td>
+<td>DB 정수 ID (모델 클래스 ID와 다름)</td>
+</tr>
+<tr>
+<td>API-08</td>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>서버가 살아 있는지</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>API-09</td>
+<td>GET</td>
+<td><code>/ready</code></td>
+<td>실제 모델·DB로 진단할 수 있는지</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>API-10</td>
+<td>GET</td>
+<td><code>/capabilities</code></td>
+<td>업로드 한도, 지원 작물, 판정 기준</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>API-11</td>
+<td>GET</td>
+<td><code>/offline/manifest</code></td>
+<td>브라우저용 모델 묶음 정보</td>
+<td>없음</td>
+</tr>
+<tr>
+<td>API-12</td>
+<td>POST</td>
+<td><code>/offline/records</code></td>
+<td>기기 진단 기록 동기화</td>
+<td>multipart <code>metadata</code>, <code>file</code>, 선택 <code>refined_file</code></td>
+</tr>
+</tbody></table></div>
+<p>이 밖에 <code>GET /uploads/{filename}</code>으로 저장된 사진을 내려받는다. JPEG·PNG만 제공하고 <code>X-Content-Type-Options: nosniff</code>를 붙인다.</p>
+<h3>API-01 POST /diagnose</h3>
+<p><strong>요청 파라미터</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>이름</th>
+<th>위치</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+<th>예시</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>file</td>
+<td>body (multipart)</td>
+<td>binary</td>
+<td>O</td>
+<td>사진. JPEG·PNG·HEIC/HEIF·DNG·WebP·AVIF</td>
+<td><code>leaf.jpg</code></td>
+</tr>
+<tr>
+<td>crop_type</td>
+<td>query</td>
+<td>enum</td>
+<td>X</td>
+<td><code>고추</code>/<code>무</code>/<code>배추</code>. 사용자가 고른 작물</td>
+<td><code>무</code></td>
+</tr>
+<tr>
+<td>Idempotency-Key</td>
+<td>header</td>
+<td>string (1~128자)</td>
+<td>X</td>
+<td>같은 요청 재전송 시 결과 재사용</td>
+<td>UUID</td>
+</tr>
+</tbody></table></div>
+<p>작물을 폼 필드가 아니라 query로 받는 것은 처음 API를 만들 때 정한 방식을 그대로 유지한 것이다. 선택한 작물로 모델 점수를 바꾸지는 않는다. 모델이 고른 작물과 다르면 <code>crop_mismatch=true</code>로 알려 주기만 한다.</p>
+<p><strong>응답 (200)</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>설명</th>
+<th>예시</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>id</td>
+<td>string (UUID)</td>
+<td>진단 ID</td>
+<td><code>3f9a1c02-…</code></td>
+</tr>
+<tr>
+<td>disease_name</td>
+<td>string</td>
+<td>1위 후보 이름</td>
+<td><code>무 검은무늬병</code></td>
+</tr>
+<tr>
+<td>confidence</td>
+<td>number (0~1)</td>
+<td>분류 점수. 발병 확률 아님</td>
+<td><code>0.46</code></td>
+</tr>
+<tr>
+<td>top_predictions</td>
+<td>object[]</td>
+<td>상위 3개 <code>{name, confidence}</code></td>
+<td></td>
+</tr>
+<tr>
+<td>crop_type / selected_crop / predicted_crop</td>
+<td>string 또는 null</td>
+<td>표시 작물 / 사용자 선택 / 모델 예측</td>
+<td><code>무</code></td>
+</tr>
+<tr>
+<td>crop_mismatch</td>
+<td>boolean</td>
+<td>선택 작물과 예측 작물 불일치</td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td>category</td>
+<td>string</td>
+<td><code>disease</code> 또는 <code>normal</code></td>
+<td><code>disease</code></td>
+</tr>
+<tr>
+<td>severity</td>
+<td>string</td>
+<td>DB에 정해 둔 병해 등급 <code>low</code>/<code>medium</code>/<code>high</code>. 사진에서 잰 진행 정도가 아님</td>
+<td><code>medium</code></td>
+</tr>
+<tr>
+<td>decision_status</td>
+<td>string</td>
+<td><code>normal</code>/<code>disease</code>/<code>crop_mismatch</code>/<code>confusion</code>/<code>low_confidence</code></td>
+<td><code>confusion</code></td>
+</tr>
+<tr>
+<td>decision_reasons</td>
+<td>string[]</td>
+<td>해당하는 이유 전부</td>
+<td><code>[&quot;confusion&quot;,&quot;low_confidence&quot;]</code></td>
+</tr>
+<tr>
+<td>policy_version</td>
+<td>string</td>
+<td>판정 정책 버전</td>
+<td><code>decision-v1:low=0.5</code></td>
+</tr>
+<tr>
+<td>recapture</td>
+<td>object 또는 null</td>
+<td>재촬영 안내 <code>{region, instruction, margin, candidates[]}</code></td>
+<td><code>{&quot;region&quot;:&quot;잎 뒷면&quot;, …}</code></td>
+</tr>
+<tr>
+<td>description, causes, prevention, management_actions</td>
+<td>string / string[]</td>
+<td>병해 안내</td>
+<td></td>
+</tr>
+<tr>
+<td>pesticides</td>
+<td>object[]</td>
+<td>진단 당시 농약 정보</td>
+<td></td>
+</tr>
+<tr>
+<td>prediction_mode</td>
+<td>string</td>
+<td><code>model</code>/<code>mock</code>/<code>browser</code>/<code>legacy</code></td>
+<td><code>model</code></td>
+</tr>
+<tr>
+<td>model_version</td>
+<td>string</td>
+<td>모델 파일 SHA-256</td>
+<td><code>b0b0b4a2…</code></td>
+</tr>
+<tr>
+<td>preprocessing_version</td>
+<td>string</td>
+<td>전처리 규격</td>
+<td><code>resize-224-imagenet-v1</code></td>
+</tr>
+<tr>
+<td>image_url / refined_image_url</td>
+<td>string 또는 null</td>
+<td>원본 / 재촬영 사진</td>
+<td><code>/uploads/….jpg</code></td>
+</tr>
+<tr>
+<td>save_status</td>
+<td>string</td>
+<td><code>saved</code> 또는 <code>failed</code></td>
+<td><code>saved</code></td>
+</tr>
+<tr>
+<td>recovery_token</td>
+<td>string 또는 null</td>
+<td>저장 실패 시 복구용</td>
+<td></td>
+</tr>
+<tr>
+<td>created_at / updated_at</td>
+<td>ISO 8601</td>
+<td>UTC 시각</td>
+<td></td>
+</tr>
+</tbody></table></div>
+<p>농약 항목에는 <code>verification_status</code>가 있다. PSIS 재동기화로 작물·병해별 사용 조건이 확인된 것만 <code>verified</code>이고, 나머지(<code>legacy_unverified</code>)는 희석배수·사용법·안전사용기준을 <code>null</code>로 내보낸다. 값이 없다고 0이나 임의 값으로 채우지 않는다.</p>
+<h3>API-02 POST /diagnose/{id}/refine</h3>
+<p>입력은 API-01과 같고, 경로의 ID는 1차 진단 ID다. 응답 형식도 같지만 <code>recapture</code>는 항상 <code>null</code>이다. 재확정 결과에서 또 재촬영을 요구하지 않는다. 새 이력을 만들지 않고 기존 이력의 결과와 <code>refined_image_url</code>을 고친다. 1차 분포는 <code>initial_predictions</code>로 계속 볼 수 있다.</p>
+<h3>API-03 POST /results/{token}/save</h3>
+<p>DB 저장에 실패했을 때 받은 <code>recovery_token</code>으로 다시 저장한다. 본문은 없다. 서버가 보관한 초안만 저장하므로, 클라이언트가 임의로 만든 진단 결과를 넣을 수는 없다. 다시 추론하지도 않는다.</p>
+<h3>API-04 GET /history</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>이름</th>
+<th>타입</th>
+<th>필수</th>
+<th>설명</th>
+<th>예시</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>page</td>
+<td>int ≥ 1</td>
+<td>X</td>
+<td>기본 1</td>
+<td><code>1</code></td>
+</tr>
+<tr>
+<td>size</td>
+<td>int 1~100</td>
+<td>X</td>
+<td>기본 20</td>
+<td><code>20</code></td>
+</tr>
+<tr>
+<td>crop_type</td>
+<td>enum</td>
+<td>X</td>
+<td>작물 필터</td>
+<td><code>배추</code></td>
+</tr>
+<tr>
+<td>severity</td>
+<td>enum</td>
+<td>X</td>
+<td>등급 필터</td>
+<td><code>high</code></td>
+</tr>
+</tbody></table></div>
+<p>응답은 <code>{items, total, crop_total, unfiltered_total, page, size}</code>다. 필터 칩에 숫자를 보여 주려고 전체 건수, 작물 조건 건수, 최종 필터 건수를 따로 준다. 이건 Figma의 작물·등급 필터 12개 상태를 그대로 구현하다 보니 필요해진 필드다.</p>
+<h3>API-09 GET /ready</h3>
+<p>DB에 연결되고 실제 가중치와 DB 클래스 매핑이 맞으면 200, 아니면 503이다. 응답은 <code>{status, database_connected, model_loaded, prediction_mode, version}</code>이다. <code>/health</code>는 모델이 깨져도 200을 주기 때문에, Docker healthcheck와 배포 확인에는 <code>/ready</code>를 쓴다. 개발용 Mock 모드도 <code>/ready</code>에서는 503이다.</p>
+<h3>API-10 GET /capabilities</h3>
+<p>프론트가 업로드 전에 한도를 확인하는 데 쓴다.</p>
+<pre><code class="language-json">{
+  &quot;upload&quot;: { &quot;formats&quot;: [&quot;JPEG&quot;,&quot;PNG&quot;,&quot;HEIC&quot;,&quot;HEIF&quot;,&quot;DNG&quot;,&quot;WEBP&quot;,&quot;AVIF&quot;], &quot;max_bytes&quot;: 104857600, &quot;max_pixels&quot;: 210000000 },
+  &quot;crops&quot;: [&quot;고추&quot;,&quot;무&quot;,&quot;배추&quot;],
+  &quot;decision&quot;: { &quot;version&quot;: &quot;decision-v1&quot;, &quot;low_confidence_threshold&quot;: 0.5, &quot;confusion_margin&quot;: &quot;(공개본 생략)&quot;,
+                &quot;second_photo_weight&quot;: &quot;(공개본 생략)&quot;, &quot;confusion_pairs&quot;: [[2,3],[4,5]] },
+  &quot;execution&quot;: { &quot;server_inference&quot;: true, &quot;browser_bundle_available&quot;: true,
+                 &quot;browser_inference&quot;: &quot;device_validation_required&quot;, &quot;voice_commands&quot;: false },
+  &quot;recovery_ttl_hours&quot;: 24
+}
+</code></pre>
+<p>위 값은 Compose 기본 설정 기준이다. 한도는 환경 변수로 바뀔 수 있으니 실제 값은 서버에서 확인한다.</p>
+<h3>API-12 POST /offline/records</h3>
+<p>휴대폰에서 이미 진단한 결과를 서버에 올린다. 서버는 다시 추론하지 않고 <code>prediction_mode=browser</code>로 출처를 표시한다.</p>
+<p><code>metadata</code>는 JSON 문자열을 담은 폼 필드다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>필드</th>
+<th>규칙</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>client_record_id</td>
+<td>UUID. 같은 ID로 같은 내용을 다시 보내면 중복 저장하지 않음</td>
+</tr>
+<tr>
+<td>selected_crop</td>
+<td>선택. 고추/무/배추 또는 null</td>
+</tr>
+<tr>
+<td>model_version, preprocessing_version</td>
+<td>manifest 값과 일치해야 함</td>
+</tr>
+<tr>
+<td>bundle_version</td>
+<td>64자리 소문자 16진수. 형식 오류는 422, 형식은 맞는데 서버에 없는 묶음은 409</td>
+</tr>
+<tr>
+<td>created_at</td>
+<td>시간대 포함. 2000년 이후, 서버 현재 시각 + 5분 이하</td>
+</tr>
+<tr>
+<td>predictions</td>
+<td><code>{class_id, confidence}</code> 9개. ID 0~8이 한 번씩, 합계 1 ± 0.001</td>
+</tr>
+<tr>
+<td>refined_predictions</td>
+<td>선택. 있으면 <code>refined_file</code>도 있어야 함</td>
+</tr>
+</tbody></table></div>
+<h3>오류 코드</h3>
+<p>모든 오류는 같은 형식으로 돌려준다.</p>
+<pre><code class="language-json">{ &quot;detail&quot;: &quot;요청 항목을 확인해 주세요.&quot;, &quot;code&quot;: &quot;VALIDATION_ERROR&quot;, &quot;retryable&quot;: false, &quot;request_id&quot;: &quot;c60fdccb-…&quot; }
+</code></pre>
+<p><code>request_id</code>는 응답 헤더 <code>X-Request-ID</code>와 같다. 사용자가 오류 화면을 캡처해 보내 주면 서버 로그에서 바로 찾을 수 있게 넣었다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>HTTP</th>
+<th>code</th>
+<th>언제</th>
+<th>화면 처리</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>400</td>
+<td>EMPTY_IMAGE, INVALID_IMAGE, UNSUPPORTED_IMAGE_FORMAT</td>
+<td>빈 파일, 깨진 파일, 이미지가 아님</td>
+<td>다른 사진 선택 안내</td>
+</tr>
+<tr>
+<td>400</td>
+<td>REFINEMENT_UNAVAILABLE, MISSING_REFINEMENT_EVIDENCE</td>
+<td>재촬영 대상이 아닌 진단, 1차 근거 없음</td>
+<td>새로 진단</td>
+</tr>
+<tr>
+<td>404</td>
+<td>DIAGNOSIS_NOT_FOUND, RESULT_NOT_FOUND, NOT_FOUND</td>
+<td>없는 이력·복구 결과·병해</td>
+<td>이력으로 돌아가기</td>
+</tr>
+<tr>
+<td>409</td>
+<td>IDEMPOTENCY_CONFLICT</td>
+<td>같은 키로 다른 사진을 보냄</td>
+<td>새 키로 재시도</td>
+</tr>
+<tr>
+<td>409</td>
+<td>MODEL_VERSION_CONFLICT</td>
+<td>1차 진단 이후 모델이 바뀜</td>
+<td>새로 진단</td>
+</tr>
+<tr>
+<td>409</td>
+<td>DIAGNOSIS_CHANGED, UNSUPPORTED_BUNDLE</td>
+<td>다른 요청이 먼저 수정함, 지원 안 하는 모델 묶음</td>
+<td>다시 불러오기</td>
+</tr>
+<tr>
+<td>410</td>
+<td>RESULT_EXPIRED</td>
+<td>복구 보관 시간(24시간) 지남</td>
+<td>다시 진단</td>
+</tr>
+<tr>
+<td>413</td>
+<td>REQUEST_TOO_LARGE, IMAGE_TOO_LARGE, IMAGE_RESOLUTION_TOO_LARGE</td>
+<td>100MiB 초과, 2억 1천만 픽셀 초과</td>
+<td>크기 안내</td>
+</tr>
+<tr>
+<td>422</td>
+<td>VALIDATION_ERROR</td>
+<td>파라미터 형식 오류</td>
+<td>입력 확인</td>
+</tr>
+<tr>
+<td>503</td>
+<td>MODEL_UNAVAILABLE, DATABASE_UNAVAILABLE</td>
+<td>모델·DB 준비 안 됨</td>
+<td>잠시 후 재시도</td>
+</tr>
+<tr>
+<td>503</td>
+<td>IMAGE_STORAGE_UNAVAILABLE, RECOVERY_STORAGE_UNAVAILABLE, SAVE_FAILED</td>
+<td>디스크 쓰기 실패</td>
+<td>잠시 후 재시도</td>
+</tr>
+<tr>
+<td>503</td>
+<td>OFFLINE_BUNDLE_UNAVAILABLE</td>
+<td>서버에 모델 묶음 없음</td>
+<td>서버 진단 사용</td>
+</tr>
+</tbody></table></div>
+<p><code>retryable</code>이 <code>true</code>인 오류에만 화면에 &quot;다시 시도&quot; 버튼을 띄운다. 오류 코드별 안내 문구와 버튼은 Figma 피드백 상태를 기준으로 화면에 적용됐다(10/17 고명준 커밋 &quot;API 오류 코드별 Figma 지속형 안내 적용&quot;).</p>
+<h3>내부 인터페이스: CNN</h3>
+<pre><code class="language-text">ml_service.predict_all(image_path) -&gt; list[(model_class_id: int, score: float)]   # 9개 전체, 내림차순
+ml_service.predict(image_path, top_k=3) -&gt; 상위 k개
+ml_service.predict_pair(image_path) -&gt; {class_id: score} 또는 None            # 보조 모델이 꺼져 있으면 None
+</code></pre>
+<ul>
+<li>입력은 이미 검증·저장된 이미지 경로다. 전처리(224 리사이즈, ImageNet 정규화)는 모델 모듈 안에서 한다.</li>
+<li>출력은 9개 클래스 전체 분포다. 재촬영 융합에 전체가 필요해서 상위 3개만 주지 않는다.</li>
+<li>체크포인트에는 <code>arch</code>, <code>num_classes</code>, <code>classes</code>, <code>model_state_dict</code>가 있어야 하고, <code>classes</code> 이름은 <code>숫자_이름</code> 형식이어야 한다. 하나라도 어긋나면 모델을 쓰지 않는다.</li>
+</ul>
+<h3>내부 인터페이스: LLM 입력·응답 (박성호, #68~#70)</h3>
+<p>진단 결과를 LLM에 넘길 때는 <code>DiagnosisLLMInput</code>(schema_version <code>1.0</code>)으로 바꾼다. 사진 URL과 내부 ID는 넣지 않고, 정의되지 않은 필드가 들어오면 거부한다(<code>extra=&quot;forbid&quot;</code>).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>필드</th>
+<th>타입</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>disease_name, category, severity</td>
+<td>string</td>
+<td></td>
+</tr>
+<tr>
+<td>crop_type, selected_crop, predicted_crop, crop_mismatch</td>
+<td></td>
+<td>작물 불일치 정보</td>
+</tr>
+<tr>
+<td>prediction_mode, decision_status, decision_reasons, policy_version</td>
+<td></td>
+<td>판정 근거</td>
+</tr>
+<tr>
+<td>confidence, top_predictions[].confidence</td>
+<td>0~1 실수</td>
+<td>NaN·무한대 거부</td>
+</tr>
+<tr>
+<td>description, causes, prevention, management_actions</td>
+<td></td>
+<td>DB 안내</td>
+</tr>
+<tr>
+<td>pesticides[].safety.phi_days, reentry_hours</td>
+<td>0 이상 정수 또는 null</td>
+<td>음수·실수 거부</td>
+</tr>
+<tr>
+<td>recapture.margin</td>
+<td>0~1 실수</td>
+<td></td>
+</tr>
+</tbody></table></div>
+<p>응답은 <code>LLMGuidanceResponse {text, source, fallback_reason}</code>이다. LLM 호출이 10초 안에 안 끝나거나, 오류가 나거나, 빈 문자열을 주면 <code>source=&quot;template&quot;</code>으로 바꾸고 미리 정해 둔 문장을 쓴다. 이때 <code>fallback_reason</code>은 <code>unavailable</code>/<code>timeout</code>/<code>error</code>/<code>invalid_response</code> 중 하나다. 템플릿은 판정 정책을 다시 계산하지 않고 이미 나온 판정을 그대로 문장으로 바꾼다.</p>
+<p>Qwen의 기능 토큰(<code>&lt;hs_get_diagnosis&gt;</code> 등)을 이 응답으로 바꾸는 handler는 아직 없다. 기능 토큰 이름을 REST 경로로 착각하지 않도록, handler가 생기면 이 표에 별도 항목으로 추가한다.</p>
+<h2>4.4 통신 프로토콜 및 형식</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>구간</th>
+<th>프로토콜</th>
+<th>메시지 형식</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>화면 ↔ 백엔드</td>
+<td>HTTP/1.1 REST</td>
+<td>요청: multipart/form-data(사진), query string. 응답: JSON (UTF-8)</td>
+</tr>
+<tr>
+<td>브라우저 ↔ 모델 묶음</td>
+<td>HTTP 정적 파일</td>
+<td><code>.onnx</code>, <code>manifest.json</code></td>
+</tr>
+<tr>
+<td>백엔드 ↔ CNN·LLM</td>
+<td>프로세스 내부 호출</td>
+<td>Python 객체 / Pydantic 모델</td>
+</tr>
+<tr>
+<td>백엔드 ↔ PSIS</td>
+<td>HTTPS</td>
+<td>XML·JSON (PSIS 형식)</td>
+</tr>
+</tbody></table></div>
+<p>gRPC나 Protocol Buffers는 쓰지 않는다. 호출하는 쪽이 브라우저와 같은 보드 안의 에이전트뿐이라 REST와 JSON으로 충분하고, FastAPI가 Swagger(<code>/docs</code>)를 자동으로 만들어 줘서 팀원끼리 계약을 맞추기 쉬웠다.</p>
+<p>요청 크기는 multipart를 해석하기 전에 ASGI 계층에서 먼저 막는다. 일반 요청은 파일 한도 + 64KiB, <code>/offline/records</code>는 사진이 두 장일 수 있어서 파일 한도 × 2 + 64KiB다.</p>
+<h2>4.5 인증 및 보안</h2>
+<h3>접근 권한</h3>
+<p>현재 로그인과 API 인증이 없다. 이력도 모든 접속자에게 공유된다. 단말은 한 농가가 자기 보드에서 쓰는 구조라서 이번 학기에는 인증을 넣지 않기로 했다. 대신 백엔드 포트는 밖으로 열지 않고 프론트엔드(3000)만 공개하며, 브라우저는 같은 출처로만 호출하므로 CORS도 열지 않는다. 웹앱을 인터넷에 공개하려면 인증과 사용자별 이력 분리가 먼저 있어야 한다.</p>
+<h3>데이터 보호</h3>
+<ul>
+<li>사진은 확장자나 MIME을 믿지 않고 실제로 디코딩해서 형식을 확인한다.</li>
+<li>클라이언트가 보낸 파일 이름은 저장에 쓰지 않는다. 서버가 UUID와 실제 형식으로 이름을 정한다.</li>
+<li>HEIC·RAW 등 변환하는 사진은 EXIF·GPS를 복사하지 않는다. JPEG/PNG 원본에 남는 위치정보는 아직 develop에서 제거하지 못했다(5번 문서 결함 D-07).</li>
+<li>오류 응답에 서버 내부 예외나 인증 정보를 넣지 않는다. LLM 호출 오류도 내용 없이 <code>error</code>로만 기록한다.</li>
+<li>HTTPS는 Compose 기본 구성에 없고, 배포할 때 앞단 프록시에서 붙인다. 휴대폰에서 카메라와 기기 진단(Service Worker)을 쓰려면 HTTPS가 꼭 필요하다.</li>
+<li>PSIS API 키는 <code>PSIS_API_KEY</code> 환경 변수로만 받는다.</li>
+</ul>
+</article></main></body></html>

@@ -2,11 +2,15 @@
 
 AI 기반 농작물 병해충 진단 서비스 **Cropy**의 백엔드 API 명세를 공유하는 저장소입니다.
 
+**문서 목록: [Cropy 개발 문서](https://hs-cropy.github.io/locallife-api-docs/)** · **[Swagger UI](https://hs-cropy.github.io/locallife-api-docs/swagger.html)**
+
+9주차 개발 문서 6종(요구사항, 아키텍처, 모델, API·인터페이스, 테스트, 배포)의 공개본을 `docs/reports/`에 함께 둡니다. 특허 출원 전인 재촬영 판정 기준 수치는 공개본에서 생략했습니다.
+
 **문서 접속: [Cropy API 문서 열기](https://hs-cropy.github.io/locallife-api-docs/api-docs.html)**
 
 별도의 설치나 백엔드 실행 없이 브라우저에서 API 설명, 요청 파라미터, 응답 형식과 오류 코드를 확인할 수 있습니다.
 
-문서 기준: 2026-10-15, Cropy `develop`의 [0f9ade1](https://github.com/hs-cropy/Cropy/commit/0f9ade10968f887d6769804aada47ac8874b17c0) ([백엔드 수정 PR #81](https://github.com/hs-cropy/Cropy/pull/81)). 고정 의존성 환경과 실제 모델로 요청·응답을 검증했습니다. 상세 범위와 제외 사항은 [검증 기록](https://github.com/hs-cropy/Cropy/blob/0f9ade10968f887d6769804aada47ac8874b17c0/docs/api/VERIFICATION.md)을 참고하세요.
+문서 기준: 2026-10-25, Cropy `develop`의 f81534e (모바일 사진 형식 지원 PR #83, 화면 개편 PR #85 반영). 이전 기준은 2026-10-15 [0f9ade1](https://github.com/hs-cropy/Cropy/commit/0f9ade10968f887d6769804aada47ac8874b17c0) ([PR #81](https://github.com/hs-cropy/Cropy/pull/81)). 고정 의존성 환경과 실제 모델로 요청·응답을 검증했습니다. 상세 범위와 제외 사항은 [검증 기록](https://github.com/hs-cropy/Cropy/blob/0f9ade10968f887d6769804aada47ac8874b17c0/docs/api/VERIFICATION.md)을 참고하세요.
 
 ## 제공 파일
 

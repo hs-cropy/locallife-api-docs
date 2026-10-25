@@ -1,0 +1,729 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>05 테스트 계획서 및 결과 보고서 · Cropy</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"><style>:root{--bg:#F6F4EC;--card:#FFFEF9;--ink:#1E2A22;--body:#3E4A42;--muted:#6B766E;--green:#2E8B57;--dark:#1F3B2C;--line:#E3E6DC}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;line-height:1.75;word-break:keep-all}
+header{background:var(--dark);color:#F6F4EC;padding:14px 16px}header .in{max-width:960px;margin:0 auto;display:flex;gap:16px;align-items:center;flex-wrap:wrap}header a{color:#F2B33D;text-decoration:none;font-weight:700}header nav{display:flex;gap:12px;flex-wrap:wrap;font-size:14px}header nav a{color:#CFE0D4;font-weight:500}
+main{max-width:960px;margin:0 auto;padding:32px 16px 80px}article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px 24px}
+h1{font-size:30px;line-height:1.3;margin:0 0 16px}h2{font-size:23px;margin:40px 0 12px;padding-top:12px;border-top:2px solid var(--line);color:var(--dark)}h3{font-size:19px;margin:28px 0 8px}h4{font-size:17px}
+p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1E8;padding:1px 5px;border-radius:4px;font-size:.92em}pre{background:#1E2A22;color:#E8EFE9;padding:14px;border-radius:10px;overflow-x:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}
+.tw{overflow-x:auto;margin:12px 0}table{border-collapse:collapse;width:100%;font-size:14.5px}th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}th{background:#EEF1E8}tr:nth-child(even) td{background:#FBFAF5}
+.note{background:#FFF4D9;border-radius:10px;padding:10px 14px;font-size:14px;color:#5A4A1E;margin-bottom:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-decoration:none;color:var(--ink)}.card:hover{border-color:var(--green)}.card b{display:block;font-size:18px;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}</style></head><body><header><div class="in"><a href="../index.html">Cropy 문서</a><nav><a href="../reports/requirements.html">01 요구사항 정의서</a><a href="../reports/architecture.html">02 아키텍처 설계서</a><a href="../reports/model.html">03 모델 설계 및 최적화 문서</a><a href="../reports/api-interface.html">04 API 및 인터페이스 정의서</a><a href="../reports/test-report.html">05 테스트 계획서 및 결과 보고서</a><a href="../reports/deployment.html">06 배포 및 통합 가이드</a><a href="../swagger.html">Swagger</a><a href="../api-docs.html">API 문서</a></nav></div></header><main><p class="note">3팀 크래파스 · 2026 모바일시스템응용프로젝트 9주차 개발 문서 공개본입니다. 특허 출원 전인 재촬영 판정 기준 수치는 공개본에서 생략했습니다.</p><article><h1>Cropy 테스트 계획서 및 결과 보고서</h1>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>팀</td>
+<td>3팀 크래파스</td>
+</tr>
+<tr>
+<td>작성일</td>
+<td>2026-10-25</td>
+</tr>
+<tr>
+<td>대상 버전</td>
+<td><code>develop</code> <code>f81534e</code> (2026-10-22)</td>
+</tr>
+<tr>
+<td>테스트 책임</td>
+<td>김헌영 (취합), 파트별 담당자</td>
+</tr>
+</tbody></table></div>
+<p>이 문서는 앞부분(5.1)이 계획, 뒷부분(5.2)이 결과다. 결과에는 10월 25일에 develop을 받아 직접 다시 돌린 자동 테스트와 PC 측정값, 그리고 그 전에 PR마다 남긴 검증 기록을 함께 넣었다. 보드와 실제 휴대폰에서 해야 하는 테스트는 아직 하지 못해서 계획만 있다.</p>
+<h2>5.1 테스트 계획서</h2>
+<h3>5.1.1 테스트 목적 및 범위</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>구분</th>
+<th>검증할 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>기능</td>
+<td>진단, 재촬영, 이력, 농약 조회, 저장 복구, 기기 진단, 음성 안내가 요구사항(FR-01~FR-12)대로 동작하는가</td>
+</tr>
+<tr>
+<td>모델 성능</td>
+<td>분류 정확도, Macro F1, 무·배추 혼동쌍 클래스별 재현율</td>
+</tr>
+<tr>
+<td>응답 속도</td>
+<td>진단 API 전체 시간, CNN 단건 추론 시간 (첫 실행·예열 후 분리)</td>
+</tr>
+<tr>
+<td>안정성</td>
+<td>모델 누락·DB 오류·디스크 오류·중복 요청·동시 수정에서 데이터가 깨지지 않는가, 30분 연속 운용</td>
+</tr>
+<tr>
+<td>자원·전력</td>
+<td>단말에서 RAM 피크, CPU·NPU 사용률, 온도, 소비 전력</td>
+</tr>
+<tr>
+<td>호환성</td>
+<td>아이폰 HEIC, 갤럭시 RAW, Android Chrome·iOS Safari</td>
+</tr>
+<tr>
+<td>사용성</td>
+<td>고령 사용자가 도움 없이 촬영부터 결과 확인까지 할 수 있는가</td>
+</tr>
+</tbody></table></div>
+<h3>5.1.2 테스트 전략</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>내용</th>
+<th>도구</th>
+<th>실행 시점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>단위 테스트</td>
+<td>판정 정책, 재촬영 융합, 이미지 검증, LLM 입력 검증, 화면 컴포넌트</td>
+<td>pytest, Vitest, Testing Library</td>
+<td>PR마다 CI</td>
+</tr>
+<tr>
+<td>통합 테스트</td>
+<td>실제 FastAPI 앱 + 임시 SQLite + 임시 업로드 폴더로 API 호출</td>
+<td>pytest TestClient</td>
+<td>PR마다 CI</td>
+</tr>
+<tr>
+<td>시스템 테스트</td>
+<td>실제 모델로 서버를 띄우고 사진 진단 → 재촬영 → 이력 → 오프라인 동기화</td>
+<td>headless Chrome 스크립트, 수동</td>
+<td>기능 병합 후</td>
+</tr>
+<tr>
+<td>성능 테스트</td>
+<td>CNN 단건 추론 시간, 진단 API 왕복 시간</td>
+<td>측정 스크립트</td>
+<td>PC 완료, 보드 수령 후</td>
+</tr>
+<tr>
+<td>부하 테스트</td>
+<td>동시 진단 요청 시 세마포어 동작, 대기 시간</td>
+<td>측정 스크립트</td>
+<td>보드 수령 후</td>
+</tr>
+<tr>
+<td>스트레스 테스트</td>
+<td>100MiB 사진, 2억 픽셀 RAW, 잘린 업로드, 디스크 쓰기 실패 주입</td>
+<td>pytest, 오류 주입</td>
+<td>CI + 수동</td>
+</tr>
+<tr>
+<td>전력 소모 테스트</td>
+<td>대기 / 진단 30회 / Qwen 포함 30분 운용 시 소비 전력</td>
+<td>USB 전력계</td>
+<td>보드 수령 후</td>
+</tr>
+<tr>
+<td>자원 효율 테스트</td>
+<td>프로세스별 RSS, CPU·NPU 점유율, 온도</td>
+<td><code>top</code>, <code>/sys/kernel/debug/rknpu/load</code>, <code>/sys/class/thermal</code></td>
+<td>보드 수령 후</td>
+</tr>
+</tbody></table></div>
+<p>CI는 <code>.github/workflows/ci.yml</code>에 있다. PR에서 바뀐 경로에 따라 프론트(lint → Vitest → typecheck → build)와 백엔드(pip check → pytest → ML 테스트)를 나눠 돌리고, 둘 다 통과해야 병합할 수 있다(#72, #73).</p>
+<h3>5.1.3 테스트 환경</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>구분</th>
+<th>환경</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>개발 PC</td>
+<td>Windows 11, Intel Core Ultra 7 155H (16코어 22스레드), RAM 32GB, Python 3.13, Node 22</td>
+</tr>
+<tr>
+<td>CI</td>
+<td>GitHub Actions <code>ubuntu-latest</code>, Python 3.13, Node 22</td>
+</tr>
+<tr>
+<td>모델 학습·평가</td>
+<td>Google Colab, Tesla T4, PyTorch 2.11.0+cu130</td>
+</tr>
+<tr>
+<td>브라우저</td>
+<td>Chrome (headless 포함). 휴대폰 Chrome·Safari는 예정</td>
+</tr>
+<tr>
+<td>단말 (예정)</td>
+<td>Orange Pi 5 Plus, RK3588, RAM 16GB, USB 카메라·마이크·스피커</td>
+</tr>
+</tbody></table></div>
+<h3>5.1.4 테스트 데이터</h3>
+<ul>
+<li><strong>모델 평가</strong>: AI Hub 데이터. 전체 공식 분할 검증 4,070장, 작업자 분리 검증 785장, 기존 분할 val·test 각 637장. 기존 분할은 중복 이미지가 있어 참고용으로만 쓴다.</li>
+<li><strong>API 테스트</strong>: 테스트 코드가 직접 만드는 JPEG·PNG·HEIF·AVIF·WebP·Bayer DNG 파일, 깨진 파일, 크기 초과 파일. 단색 사진은 흐름 확인용이고 정확도 평가에는 쓰지 않는다.</li>
+<li><strong>시스템 테스트</strong>: 실제 병해 사진 9장(클래스별 1장) + 실제 모델.</li>
+<li><strong>LLM</strong>: 사용흐름 v12 검증 24행, v18 검증 28행.</li>
+<li><strong>현장 평가 (예정)</strong>: 팀원이 직접 찍은 사진. 특히 무 잎 뒷면 근접 사진을 모아 재촬영 효과를 따로 본다. 학습에 쓴 사진은 넣지 않는다.</li>
+</ul>
+<h3>5.1.5 테스트 일정 및 책임</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>주차</th>
+<th>기간</th>
+<th>테스트</th>
+<th>담당</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>9주차</td>
+<td>10/26~11/1</td>
+<td>자동 테스트 재실행, PC 성능 기준선, 결함 정리 (이 문서)</td>
+<td>김헌영</td>
+</tr>
+<tr>
+<td>9주차</td>
+<td>10/26~11/1</td>
+<td>실제 휴대폰에서 카메라·HEIC·RAW 업로드, 음성 안내 확인</td>
+<td>고명준, 김민서</td>
+</tr>
+<tr>
+<td>10주차</td>
+<td>11/2~11/8</td>
+<td>보드 ARM64 설치·CNN CPU 기준선(첫 실행·예열 후·p95·RAM·온도)</td>
+<td>이서하, 김헌영</td>
+</tr>
+<tr>
+<td>11주차</td>
+<td>11/9~11/15</td>
+<td>Qwen RKLLM 변환 후 기능 선택 정확도·지연 비교, LLM 연결 통합 테스트</td>
+<td>김헌영, 박성호</td>
+</tr>
+<tr>
+<td>12주차</td>
+<td>11/16~11/22</td>
+<td>카메라→진단→음성 통합, 오프라인(인터넷 차단) 시연 흐름</td>
+<td>고명준, 이서하</td>
+</tr>
+<tr>
+<td>13주차</td>
+<td>11/23~11/29</td>
+<td>30분 연속 운용, 전력·온도, 재부팅 후 복구, 사용자 테스트</td>
+<td>전원</td>
+</tr>
+<tr>
+<td>14주차</td>
+<td>11/30~12/6</td>
+<td>최종 회귀 테스트, 결과 보고서 확정</td>
+<td>김헌영</td>
+</tr>
+</tbody></table></div>
+<p>보드 지급 날짜에 따라 10주차 이후 일정은 밀릴 수 있다.</p>
+<h3>5.1.6 합격 기준</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>기준</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>자동 테스트</td>
+<td>백엔드·프론트·ML 테스트 실패 0건. 건너뜀은 이유가 기록된 것만 허용</td>
+</tr>
+<tr>
+<td>CI</td>
+<td>develop 최신 커밋 CI 성공</td>
+</tr>
+<tr>
+<td>모델 정확도</td>
+<td>독립 test Top-1 85% 이상, 무 검은무늬병·무 노균병 재현율 각 85% 이상</td>
+</tr>
+<tr>
+<td>양자화</td>
+<td>변환 전 대비 전체 정확도 하락 1.5%p 이내, 클래스별 하락 3%p 이내</td>
+</tr>
+<tr>
+<td>CNN 속도</td>
+<td>단말 단건 예열 후 중앙값 1초 이내 (전처리 포함)</td>
+</tr>
+<tr>
+<td>진단 API</td>
+<td>사진 업로드부터 응답까지 5초 이내</td>
+</tr>
+<tr>
+<td>안정성</td>
+<td>30분 연속 운용 중 오류 0건, 재부팅 후 이력·사진 보존</td>
+</tr>
+<tr>
+<td>데이터 무결성</td>
+<td>오류 주입 시 DB 롤백과 새 파일 정리, 기존 이력 손상 0건</td>
+</tr>
+<tr>
+<td>전력</td>
+<td>30분 운용 중 서멀 스로틀링 없음. 소비 전력 수치는 기준선 측정 후 정함</td>
+</tr>
+<tr>
+<td>사용성</td>
+<td>고령 사용자 3명 이상이 도움 없이 촬영→결과 확인 완료</td>
+</tr>
+</tbody></table></div>
+<h2>5.2 테스트 결과 보고서</h2>
+<h3>5.2.1 테스트 개요</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>테스트 기간</td>
+<td>2026-09-18 ~ 2026-10-25 (PR별 검증 기록 + 10/25 재실행)</td>
+</tr>
+<tr>
+<td>대상 버전</td>
+<td><code>develop</code> <code>f81534e</code>, 서비스 모델 SHA-256 <code>b0b0b4a24af1430778a2bc15ede5cc068e200539dfeb7fc5ced02574a63d4b8b</code></td>
+</tr>
+<tr>
+<td>테스트 책임자</td>
+<td>김헌영</td>
+</tr>
+<tr>
+<td>실행 환경</td>
+<td>개발 PC (Core Ultra 7 155H), GitHub Actions, Colab T4</td>
+</tr>
+</tbody></table></div>
+<h3>5.2.2 테스트 결과 요약</h3>
+<p>PC와 CI에서 할 수 있는 테스트는 모두 통과했다. 실패한 건 정확도 기준과, 아직 해 보지 못한 단말 테스트다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>결과</th>
+<th>판정</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>백엔드 자동 테스트</td>
+<td>367 통과, 1 건너뜀</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>프론트엔드 단위 테스트</td>
+<td>37개 파일, 665 통과</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>기기 진단 로직 테스트</td>
+<td>17 통과</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>ML 테스트</td>
+<td>84 통과</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>타입 검사</td>
+<td>오류 0</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>CI (develop 최근 5회)</td>
+<td>모두 성공</td>
+<td>합격</td>
+</tr>
+<tr>
+<td>모델 정확도 (클래스별 기준)</td>
+<td>무 검은무늬병 68.0%, 무 노균병 71.1% (기존 test)</td>
+<td><strong>불합격</strong></td>
+</tr>
+<tr>
+<td>CNN 속도 (PC)</td>
+<td>예열 후 중앙값 166ms</td>
+<td>참고 (단말 기준 아님)</td>
+</tr>
+<tr>
+<td>단말 속도·전력·장시간</td>
+<td>미실시</td>
+<td>보류</td>
+</tr>
+<tr>
+<td>실제 휴대폰</td>
+<td>미실시</td>
+<td>보류</td>
+</tr>
+</tbody></table></div>
+<p>주요 발견 사항은 세 가지다.</p>
+<ol>
+<li>서버 쪽 오류 처리는 촘촘하게 테스트돼 있다. 저장 실패, 중복 요청, 동시 수정, 디스크 오류 주입까지 자동 테스트에 들어 있다.</li>
+<li>모델은 전체 정확도는 높지만 무 두 병을 구분하는 능력이 기준에 못 미친다. 재촬영 기능이 이걸 얼마나 보완하는지는 아직 평가 자료가 없다.</li>
+<li>병합 과정에서 기능이 빠지는 일이 두 번 있었다(D-05, D-06). 테스트가 잡아내지 못한 경우라 리뷰 체크리스트에 추가했다.</li>
+</ol>
+<h3>5.2.3 항목별 상세 결과</h3>
+<h4>기능 테스트</h4>
+<p>10월 25일 develop을 새로 받아 실행했다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>묶음</th>
+<th>명령</th>
+<th>결과</th>
+<th>시간</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>백엔드</td>
+<td><code>pytest -q</code> (backend)</td>
+<td>367 passed, 1 skipped, 경고 3</td>
+<td>53.6초</td>
+</tr>
+<tr>
+<td>ML</td>
+<td><code>pytest tests -q</code> (ml)</td>
+<td>84 passed</td>
+<td>10.5초</td>
+</tr>
+<tr>
+<td>프론트 단위</td>
+<td><code>vitest run</code></td>
+<td>37 files, 665 passed</td>
+<td>23.5초</td>
+</tr>
+<tr>
+<td>기기 진단 로직</td>
+<td><code>npm run test:offline</code></td>
+<td>17 passed</td>
+<td>0.1초</td>
+</tr>
+<tr>
+<td>타입 검사</td>
+<td><code>npm run typecheck</code></td>
+<td>오류 0</td>
+<td>-</td>
+</tr>
+</tbody></table></div>
+<p>건너뛴 1건은 Windows에서 심볼릭 링크를 만들 권한이 없어서 생략되는 업로드 정리 테스트다. CI(Linux)에서는 실행된다. 경고 3건은 TestClient와 ONNX exporter의 사용 중단 예고다.</p>
+<p>자동 테스트 말고 PR 단계에서 한 시스템 테스트 기록도 있다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>날짜</th>
+<th>내용</th>
+<th>결과</th>
+<th>근거</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10/8</td>
+<td>headless Chrome에서 모델 준비 → WASM 추론 → 네트워크 차단 → 새로고침 후 이력 복원·새 진단 → 서버 저장 후 응답 유실 → 같은 본문 재전송</td>
+<td>중복 없이 저장, JS 오류 없음</td>
+<td>#56, #58</td>
+</tr>
+<tr>
+<td>10/15</td>
+<td>격리된 서버와 DB 복사본에 실제 모델로 HTTP 요청 46건 (사진 9장 추론, 이력, 중복 요청, 재촬영, 오프라인 입력, 오류 응답)</td>
+<td>전부 기대 상태 코드</td>
+<td>#81</td>
+</tr>
+<tr>
+<td>10/15</td>
+<td>잘못된 묶음 버전 3종 / 없는 묶음 / 정상 묶음</td>
+<td>422 / 409 / 200</td>
+<td>#81</td>
+</tr>
+<tr>
+<td>10/15</td>
+<td>이미지 쓰기·복구 폴더 생성에 OSError 주입</td>
+<td>각각 503 IMAGE_STORAGE_UNAVAILABLE, RECOVERY_STORAGE_UNAVAILABLE</td>
+<td>#81</td>
+</tr>
+<tr>
+<td>10/16</td>
+<td>HEIF·AVIF·WebP·Bayer DNG 생성 파일로 디코딩·저장·재촬영·해상도 제한</td>
+<td>통과</td>
+<td>#83</td>
+</tr>
+</tbody></table></div>
+<h4>성능 테스트: 정확도</h4>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>모델</th>
+<th>평가 자료</th>
+<th align="right">정확도</th>
+<th align="right">Macro F1</th>
+<th align="right">무 검은무늬병</th>
+<th align="right">무 노균병</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>서비스 모델 (224)</td>
+<td>기존 test 637장</td>
+<td align="right">93.1%</td>
+<td align="right">-</td>
+<td align="right">68.0% (51/75)</td>
+<td align="right">71.1% (27/38)</td>
+</tr>
+<tr>
+<td>서비스 모델 (224)</td>
+<td>기존 val 637장</td>
+<td align="right">94.7%</td>
+<td align="right">-</td>
+<td align="right">-</td>
+<td align="right">-</td>
+</tr>
+<tr>
+<td>전체 데이터 256 기준</td>
+<td>공식 val 4,070장</td>
+<td align="right">99.43%</td>
+<td align="right">0.9608</td>
+<td align="right">69/76</td>
+<td align="right">19/24</td>
+</tr>
+<tr>
+<td>256 미세조정 후보</td>
+<td>공식 val 4,070장</td>
+<td align="right">99.58%</td>
+<td align="right">0.9624</td>
+<td align="right">71/76</td>
+<td align="right">17/24</td>
+</tr>
+<tr>
+<td>384 미세조정 후보</td>
+<td>공식 val 4,070장</td>
+<td align="right">99.56%</td>
+<td align="right">0.9600</td>
+<td align="right">76/76</td>
+<td align="right">15/24</td>
+</tr>
+</tbody></table></div>
+<p>전체 데이터 실험의 정확도가 99%를 넘는 것은 검증셋의 88%가 정상 사진이기 때문이다. 이 숫자를 그대로 성능이라고 하면 안 된다고 판단했다. 무 노균병은 검증 24장뿐이라 1장 차이가 4%p다.</p>
+<h4>성능 테스트: 추론 속도 (PC)</h4>
+<p>10월 25일 개발 PC에서 측정했다. 서비스 모델을 PyTorch CPU로 불러온 뒤 기존 test 사진 30장을 한 장씩 처리했다. 시간에는 이미지 열기·리사이즈·정규화·추론·softmax가 포함되고, HTTP·DB 처리는 빠져 있다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모델 로드 (torch import 제외)</td>
+<td>0.27초</td>
+</tr>
+<tr>
+<td>첫 장</td>
+<td>284ms</td>
+</tr>
+<tr>
+<td>예열 후 중앙값 (29장)</td>
+<td>166ms</td>
+</tr>
+<tr>
+<td>예열 후 p95</td>
+<td>229ms</td>
+</tr>
+<tr>
+<td>프로세스 메모리 (RSS)</td>
+<td>약 498MiB</td>
+</tr>
+<tr>
+<td>스레드</td>
+<td>16 (PyTorch 기본값)</td>
+</tr>
+</tbody></table></div>
+<p>RK3588의 A76 코어는 이 PC보다 한참 느리고 스레드도 적다. 그래서 이 값으로 단말 속도를 추정하지 않고, 보드에서 같은 스크립트로 다시 잰다. 다만 메모리 약 0.5GB는 단말 메모리 계획을 세울 때 출발점으로 쓴다.</p>
+<h4>성능 테스트: LLM 기능 선택</h4>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>실험</th>
+<th align="right">검증</th>
+<th align="right">함수 선택</th>
+<th align="right">함수+인자 전체 일치</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>v14 (200 step)</td>
+<td align="right">28</td>
+<td align="right">23 (82.1%)</td>
+<td align="right">10 (35.7%)</td>
+</tr>
+<tr>
+<td>v18 (400 step)</td>
+<td align="right">28</td>
+<td align="right">27 (96.4%)</td>
+<td align="right">18 (64.3%)</td>
+</tr>
+<tr>
+<td>diagnostic32 (업데이트 100회)</td>
+<td align="right">24</td>
+<td align="right">21 (87.5%)</td>
+<td align="right">12 (50.0%)</td>
+</tr>
+</tbody></table></div>
+<p>함수 선택은 꽤 맞히지만 인자까지 맞히는 비율은 절반 정도다. 검증셋이 작고 같은 셋을 여러 번 봤기 때문에 이 숫자는 실험끼리 비교하는 용도로만 쓴다. 이 실험 결과는 로컬 기록이며 아직 GitHub에 올리지 않았다.</p>
+<h4>전력 소모 테스트</h4>
+<p>미실시. 보드 수령 후 USB-C 전력계로 대기, 진단 30회, Qwen 포함 30분 운용 세 조건을 잰다.</p>
+<h4>자원 활용 효율</h4>
+<p>PC에서 CNN 추론 프로세스 RSS 약 498MiB만 확인했다. 단말에서는 백엔드·프론트·Qwen·음성을 모두 올린 상태의 합계와 프로세스별 값을 잰다.</p>
+<h4>안정성 테스트</h4>
+<p>장시간 구동은 미실시. 대신 오류 상황에서 데이터가 깨지지 않는지는 자동 테스트로 확인하고 있다. 예를 들어 <code>test_recovery_contracts.py</code>의 <code>test_concurrent_refinement_retry_returns_winner_without_deleting_its_photo</code>는 재촬영 재시도가 동시에 들어왔을 때 먼저 저장된 결과의 사진이 지워지지 않는지 본다. <code>test_diagnosis_integrity.py</code>는 DB 커밋 실패 시 롤백과 새 사진 삭제, 모델이 바뀐 뒤 재촬영하면 409와 기존 상태 유지, 재촬영 사진 교체는 커밋 후에만 이전 파일 삭제 같은 경우를 다룬다. 마이그레이션 전 SQLite 백업과 외래키 위반 시 기동 중단은 <code>test_database_migration.py</code>에 있다.</p>
+<h3>5.2.4 결함 분석 및 조치 사항</h3>
+<p>develop의 <code>fix:</code> 커밋과 PR 리뷰 기록에서 뽑았다. 심각도는 데이터 손실·잘못된 안내 가능성이 있으면 상, 기능이 안 되면 중, 화면 문제면 하로 매겼다.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>결함</th>
+<th>심각도</th>
+<th>발견</th>
+<th>조치</th>
+<th>상태</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D-01</td>
+<td>모델 파일이 없으면 조용히 Mock 결과를 내서, 운영에서도 가짜 진단이 나갈 수 있었음</td>
+<td>상</td>
+<td>9/28 백엔드 점검</td>
+<td>운영 모드에서는 503, <code>/ready</code>로 준비 상태 분리 (김헌영, #19)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-02</td>
+<td>업로드 크기를 multipart를 다 받은 뒤에 검사해서 큰 요청이 메모리를 잡아먹음</td>
+<td>상</td>
+<td>9/28</td>
+<td>수신 전 크기 제한, 동시 진단 수 제한 (김헌영, #20)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-03</td>
+<td>농약 제품과 작물별 사용 조건이 한 표에 섞여 다른 작물의 희석배수가 보일 수 있었음</td>
+<td>상</td>
+<td>9/28</td>
+<td>사용 조건 표 분리, 검증 안 된 조건 숨김 (김헌영, #21)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-04</td>
+<td>SQLite 칼럼 추가 시 백업 없이 바로 변경</td>
+<td>상</td>
+<td>9/28</td>
+<td>변경 전 백업, 트랜잭션, 외래키 검사 (김헌영, #18)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-05</td>
+<td>develop 병합 충돌을 풀다가 <code>package.json</code>의 쉼표와 <code>typecheck</code> 스크립트가 빠짐</td>
+<td>중</td>
+<td>10/12 CI 실패</td>
+<td>복구 (고명준), 설치 전 매니페스트 검사 CI 추가 (김헌영, #73)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-06</td>
+<td>PR #85 병합 충돌 해결 중 모바일 사진 형식 지원(#83)이 빠짐</td>
+<td>중</td>
+<td>10/22 병합 전 확인</td>
+<td>복원 커밋 (고명준, b9fb4dc)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-07</td>
+<td>작은 JPEG/PNG는 원본 그대로 저장해서 EXIF의 GPS 위치가 남음</td>
+<td>상</td>
+<td>10/17</td>
+<td>저장·추론 전 메타데이터 제거. 로컬 커밋은 있으나 아직 PR 전</td>
+<td>진행 중</td>
+</tr>
+<tr>
+<td>D-08</td>
+<td>느린 업로드가 연결을 오래 붙잡을 수 있음 (수신 시간 제한 없음)</td>
+<td>중</td>
+<td>10/17</td>
+<td>업로드 입장 제한과 본문 수신 시간 제한. 로컬 커밋, PR 전</td>
+<td>진행 중</td>
+</tr>
+<tr>
+<td>D-09</td>
+<td>깨지거나 만료된 복구 초안 하나 때문에 업로드 정리 전체가 멈춤</td>
+<td>중</td>
+<td>10/17</td>
+<td>문제 초안만 격리. 로컬 커밋, PR 전</td>
+<td>진행 중</td>
+</tr>
+<tr>
+<td>D-10</td>
+<td>개발 모드(React StrictMode)에서 카메라가 켜지지 않음</td>
+<td>중</td>
+<td>10/17</td>
+<td>수정 (고명준, 10/17)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-11</td>
+<td>오래된 카메라 권한 응답이 늦게 도착해 새 화면 상태를 덮어씀</td>
+<td>하</td>
+<td>10/11</td>
+<td>오래된 응답 무시 (김헌영)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-12</td>
+<td>이력 조회가 실패해도 이전 목록이 그대로 보여 최신 상태로 착각할 수 있음</td>
+<td>하</td>
+<td>10/11</td>
+<td>실패 시 이전 목록 숨김 (김헌영)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-13</td>
+<td>서버 장애, 재분석 불가, 재저장 불가가 같은 문구로 안내됨</td>
+<td>하</td>
+<td>PR #85 리뷰</td>
+<td>오류별 안내 분리 (고명준, 10/18)</td>
+<td>완료</td>
+</tr>
+<tr>
+<td>D-14</td>
+<td>Qwen pilot50에서 모든 입력에 같은 출력. FP16 loss scale이 커서 초반 gradient가 NaN</td>
+<td>상 (모델)</td>
+<td>10/15</td>
+<td>loss scale 32 고정, 업데이트 건너뜀 검사 추가</td>
+<td>완료 (실험)</td>
+</tr>
+<tr>
+<td>D-15</td>
+<td>무 노균병 재현율 기준 미달</td>
+<td>상 (모델)</td>
+<td>9/3부터</td>
+<td>재촬영 기능, 미세조정 후보 비교(교체 보류), 원인 조사 진행</td>
+<td>진행 중</td>
+</tr>
+<tr>
+<td>D-16</td>
+<td>의존성 보안 취약점 (Starlette, PyTorch, Pillow, Next.js 등)</td>
+<td>중</td>
+<td>9/29 Dependabot 알림 검토</td>
+<td>보안 버전으로 갱신 (김헌영, #71, 10/11)</td>
+<td>완료</td>
+</tr>
+</tbody></table></div>
+<p>D-07~D-09는 10월 17일에 수정했지만 PR을 올리지 못해 develop에는 아직 없다. 9주차 안에 PR로 올린다.</p>
+<h3>5.2.5 결론 및 개선 권고</h3>
+<p>웹앱의 서버·화면 기능은 자동 테스트와 CI로 안정적으로 관리되고 있다. 테스트 수가 백엔드 367개, 프론트 665개로 늘었고, 오류 상황 테스트 비중이 높다. 반면 실제 기기에서 확인한 것은 PC Chrome뿐이고, 이 프로젝트의 핵심인 온디바이스 부분(보드 속도, 전력, 오프라인 음성)은 아직 손대지 못했다.</p>
+<p>앞으로 할 일은 이렇게 정했다.</p>
+<ol>
+<li>로컬 수정 3건(D-07~D-09)을 바로 PR로 올린다. 특히 위치정보 문제는 사용자 사진을 다루는 서비스에서 우선순위가 높다.</li>
+<li>보드를 받으면 첫 주에 CNN CPU 기준선부터 잰다. 이 값을 봐야 RKNN 변환이 필요한지 정할 수 있다.</li>
+<li>무 병해 평가 자료를 따로 모은다. 지금은 재촬영 기능이 정확도를 실제로 올리는지 보여 줄 근거가 없다. 잎 앞면과 뒷면을 같은 잎에서 찍은 쌍을 모아야 한다.</li>
+<li>병합 충돌 후 체크를 강화한다. D-05, D-06 모두 충돌 해결 중에 생겼다. 충돌이 있었던 PR은 병합 전에 관련 기능을 한 번 직접 돌려 보도록 리뷰 규칙에 넣는다.</li>
+<li>실제 휴대폰 테스트를 9주차에 끝낸다. 아이폰 HEIC와 갤럭시 RAW는 생성한 테스트 파일로만 확인했다.</li>
+</ol>
+</article></main></body></html>
