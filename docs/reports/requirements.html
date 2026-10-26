@@ -88,7 +88,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <h3>프로젝트 목표 및 배경</h3>
 <p>고추·무·배추는 국내 노지에서 많이 기르는 작물이지만, 병이 생겼을 때 농가가 바로 물어볼 곳이 마땅치 않다. 농업기술센터에 사진을 보내거나 직접 찾아가야 하는데, 고령 농업인에게는 이 과정이 번거롭다. 또 밭에서는 모바일 데이터가 잘 안 터지는 경우가 있어서, 사진을 서버로 보내 결과를 받는 방식만으로는 쓰기 어렵다고 판단했다.</p>
 <p>그래서 처음부터 &quot;밭에서 인터넷 없이도 찍고, 결과를 듣는다&quot;를 최종 모습으로 잡았다. 진단 모델과 안내 모델이 기기 안에서 돌아가야 사진이 외부로 나가지 않고, 통신이 끊겨도 쓸 수 있다. 이것이 온디바이스로 가는 이유다.</p>
-<p>다만 보드가 늦게 지급되는 상황이라, 1단계는 휴대폰 브라우저로 쓰는 웹앱을 먼저 완성하고 2단계에서 Orange Pi로 옮기는 순서로 진행하고 있다.</p>
+<p>다만 보드 지급이 늦어지는 상황이라, 1단계는 휴대폰 브라우저로 쓰는 웹앱을 먼저 완성하고 2단계에서 Orange Pi로 옮기는 순서로 진행하고 있다.</p>
 <h3>기획 과정</h3>
 <p>기획과 화면 디자인은 김헌영이 맡았다. 9월 3일에 시나리오 스케치, 스토리보드, 프로젝트 기획서 초안, 디자인 시스템 초안을 한꺼번에 작성했고, 9월 8일에 웹앱 페이지별 기능명세서와 ERD, 4개 스프린트 백로그를 만들어 팀에 공유했다. 이 요구사항 정의서의 기능 목록도 그때의 기능명세서에서 출발했다.</p>
 <p>기획 단계에서 정한 사용자는 세 명이다.</p>
@@ -120,7 +120,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>웹앱 이력</td>
 </tr>
 </tbody></table></div>
-<p>문제 정의도 이 사람들을 기준으로 했다. P1은 글씨와 조작이 문제여서 큰 글씨와 음성 안내가, P2는 정보 찾기가 문제여서 농약 정보 연결이 요구사항으로 들어갔다. 혼동쌍 재촬영은 9월 초 모델 평가에서 오분류 44건 중 26건이 무 검은무늬병과 무 노균병 사이에서 나온 것을 보고 기획에 넣었다.</p>
+<p>문제 정의도 이 페르소나들을 기준으로 했다. P1은 글씨와 조작이 문제여서 큰 글씨와 음성 안내가, P2는 정보 찾기가 문제여서 농약 정보 연결이 요구사항으로 들어갔다. 혼동쌍 재촬영은 9월 초 모델 평가에서 오분류 44건 중 26건이 무 검은무늬병과 무 노균병 사이에서 나온 것을 보고 기획에 넣었다.</p>
 <p>10월 7일까지는 Figma에서 모바일·데스크톱 화면을 다시 디자인하면서 확인·완료·오류·로딩 같은 피드백 상태를 모바일 24종, 데스크톱 24종으로 정리했다(사진 형식 오류, 분석 시간 초과, 저장 실패, 이력 조회 실패 등). 10월 8일에는 이 디자인을 그대로 구현하려면 백엔드에 무엇이 더 필요한지 검토했고, 그 결과로 이력 심각도 필터, 저장 실패 복구, 저장 당시 안내 보존, 판정 상태와 오류 코드 API가 추가됐다(#53, #54). 디자인 단계에서 정한 예외 상태가 기능 요구사항으로 내려온 경우다.</p>
 <h3>기대 효과</h3>
 <ul>
@@ -140,6 +140,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <th>상태</th>
 <th>작업자</th>
 <th>근거 PR·커밋</th>
+<th>예정 주차</th>
 </tr>
 </thead>
 <tbody><tr>
@@ -149,6 +150,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>고명준(카메라), 김헌영(모바일 형식)</td>
 <td>#28, #83, 9/29 업로드 전 검증 커밋</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-02</td>
@@ -157,6 +159,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영</td>
 <td>9/3 초기 백엔드·ML, #19</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-03</td>
@@ -165,6 +168,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영(판정 API), 김민서(예외 화면)</td>
 <td>#53, #78</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-04</td>
@@ -173,6 +177,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영(판정·융합), 김민서(재촬영 예외 흐름), 고명준(새 촬영 화면 연결)</td>
 <td>9/3 초기 커밋, #78, #85</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-05</td>
@@ -181,6 +186,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현. 내용은 팀이 정리한 시드 데이터</td>
 <td>김헌영</td>
 <td>#18, #53</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-06</td>
@@ -189,6 +195,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영</td>
 <td>9/3 PSIS 동기화, #21</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-07</td>
@@ -197,6 +204,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영(API·필터), 김민서(이력 UI)</td>
 <td>#54, #78</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-08</td>
@@ -205,6 +213,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현. 음성 입력(STT)은 없음</td>
 <td>고명준</td>
 <td>#41</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-09</td>
@@ -213,6 +222,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영</td>
 <td>#55, #56, #58</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-10</td>
@@ -221,6 +231,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>김헌영</td>
 <td>#53, #54</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-11</td>
@@ -229,6 +240,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>구현</td>
 <td>박성호</td>
 <td>#67</td>
+<td>완료</td>
 </tr>
 <tr>
 <td>FR-12</td>
@@ -237,6 +249,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>개발 중. 백엔드 쪽 LLM 입력 스키마·수치 검증·10초 시간 제한·템플릿 대체 응답까지 병합. Qwen 모델은 Colab 실험 단계이며 백엔드와 연결 전</td>
 <td>박성호(백엔드 계약), 김헌영(Qwen 데이터·학습)</td>
 <td>#68, #69, #70, #79, #60, #61</td>
+<td>11~12주차 (Qwen 학습은 11월 중 완료 목표)</td>
 </tr>
 <tr>
 <td>FR-13</td>
@@ -245,6 +258,7 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>계획. 보드 미수령으로 관련 커밋 없음</td>
 <td>이서하(예정)</td>
 <td>-</td>
+<td>보드 수령 후 10~12주차</td>
 </tr>
 <tr>
 <td>FR-14</td>
@@ -253,8 +267,55 @@ p,li{color:var(--body);font-size:16px}a{color:var(--green)}code{background:#EEF1
 <td>이번 학기 범위 밖</td>
 <td>-</td>
 <td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>FR-15</td>
+<td>음성 질문</td>
+<td>말로 물으면 한국어 STT로 글자로 바꿔 Qwen에 넘긴다. 스피커 소리를 다시 알아듣지 않게 한다</td>
+<td>계획. 현재는 TTS(읽어 주기)만 있음</td>
+<td>고명준(예정)</td>
+<td>-</td>
+<td>12주차 (단말 음성 통합과 함께)</td>
+</tr>
+<tr>
+<td>FR-16</td>
+<td>결과 화면 한 줄 안내</td>
+<td>진단 결과 화면(Figma 03)에 결과 한 줄 요약과 할 일 설명 필드를 API로 제공</td>
+<td>진행 중</td>
+<td>박성호</td>
+<td>이슈 #88</td>
+<td>미정 (이슈 일정 따름)</td>
+</tr>
+<tr>
+<td>FR-17</td>
+<td>서버 배포</td>
+<td>서버 한 대에 백엔드·프론트를 Docker로 올리고 HTTPS 적용. 휴대폰 카메라 미리보기와 기기 진단이 HTTPS에서 동작</td>
+<td>계획. 무료·학생 크레딧 VM 검토 중</td>
+<td>이서하</td>
+<td>-</td>
+<td>서버 결정 후</td>
+</tr>
+<tr>
+<td>FR-18</td>
+<td>PWA</td>
+<td>홈 화면에 앱처럼 설치. 기존 기기 진단(<code>/offline/</code>) 서비스 워커와 범위가 겹치지 않게 통합</td>
+<td>계획</td>
+<td>고명준</td>
+<td>-</td>
+<td>서버 배포 후</td>
+</tr>
+<tr>
+<td>FR-19</td>
+<td>재촬영 효과 검증</td>
+<td>같은 무 잎의 앞면·뒷면 사진을 직접 모아, 재촬영 전후 정확도를 비교</td>
+<td>계획</td>
+<td>김헌영</td>
+<td>-</td>
+<td>10~13주차</td>
 </tr>
 </tbody></table></div>
+<p>예정 주차는 월요일 기준이다(9주차 = 10/26<del>11/1, 14주차 = 11/30</del>12/6). 단말 관련 일정은 Orange Pi 보드 수령 시점에 따라 밀릴 수 있다. Qwen 학습은 학교 클라우드 지원비를 아직 받지 못해 Colab 무료 학습량 제한을 받고 있어서, ML 작업은 11월 중 완료를 목표로 한다.</p>
 <p>화면 쪽은 기능과 별개로 디자인 개편 작업이 크게 한 번 있었다. 김헌영이 Figma에서 만든 디자인 시스템과 화면을 기준으로, 고명준이 10월 12<del>13일에 디자인 토큰을 코드로 옮기고 Button·Switch·Accordion·ActionBar 같은 공통 컴포넌트와 앱 틀(AppShell·헤더·내비)을 만들었다(#75, #77). 10월 17일에는 촬영·진단 결과 화면(Figma 01</del>03)을 새 디자인으로 바꿨다(#85). 김민서는 같은 시기에 진단 예외 상태와 이력 화면을 새 컴포넌트로 다시 만들었다(#78).</p>
 <h3>주요 시나리오</h3>
 <p><strong>시나리오 A. 일반 진단</strong>

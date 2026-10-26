@@ -641,7 +641,7 @@ ml_service.predict_pair(image_path) -&gt; {class_id: score} 또는 None         
 <td>XML·JSON (PSIS 형식)</td>
 </tr>
 </tbody></table></div>
-<p>gRPC나 Protocol Buffers는 쓰지 않는다. 호출하는 쪽이 브라우저와 같은 보드 안의 에이전트뿐이라 REST와 JSON으로 충분하고, FastAPI가 Swagger(<code>/docs</code>)를 자동으로 만들어 줘서 팀원끼리 계약을 맞추기 쉬웠다.</p>
+<p>gRPC나 Protocol Buffers는 쓰지 않는다. 호출 주체가 브라우저와 같은 보드 안의 에이전트로 제한되어 있으므로, REST와 JSON으로 충분하고, FastAPI가 Swagger(<code>/docs</code>)를 자동으로 만들어 줘서 팀원끼리 계약을 맞추기 쉬웠다.</p>
 <p>요청 크기는 multipart를 해석하기 전에 ASGI 계층에서 먼저 막는다. 일반 요청은 파일 한도 + 64KiB, <code>/offline/records</code>는 사진이 두 장일 수 있어서 파일 한도 × 2 + 64KiB다.</p>
 <h2>4.5 인증 및 보안</h2>
 <h3>접근 권한</h3>
